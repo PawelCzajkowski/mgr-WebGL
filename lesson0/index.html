@@ -1,0 +1,59 @@
+<html>
+<head>
+  <title>Lesson 0</title>
+  <style>
+    body {margin: 0px}
+    canvas {width: "100%"; height: "100%"}
+  </style>
+  </head>
+<body>
+  <script src="js/three.min.js"></script>
+  <script src="js/dat.gui.min.js"></script>
+  <script>
+    var userInterface = new function() {
+      this.size = '100';
+      this.kolor_tla = "#a6caf0";
+      this.rzutowanie = false;
+    }
+    var gui = new dat.GUI();
+
+    var bgColor = gui.addColor(userInterface, 'kolor_tla');
+    bgColor.onChange(function(value) {
+      console.log(value);
+      renderer.setClearColor(value);
+    });
+    
+    function render() {
+      requestAnimationFrame(render);
+
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+
+      renderer.render(scene, camera);
+    }
+    
+    var scene = new THREE.Scene();
+//    var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1000);
+    var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+    
+    camera.position.set(0, 0, 100);
+    camera.lookAt(scene.position);
+    
+    var renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setClearColor("#a6caf0");
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    
+    var geometry = new THREE.BoxGeometry(100, 100, 100);
+    var material = new THREE.MeshBasicMaterial( {color: "green"});
+    var cube = new THREE.Mesh(geometry, material);
+    
+    scene.add(cube);
+    scene.add(camera);
+    
+//    camera.position.z = 5;
+    render();
+  </script>
+</body>
+</html>
