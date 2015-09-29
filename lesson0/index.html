@@ -10,8 +10,9 @@
   <script src="js/three.min.js"></script>
   <script src="js/dat.gui.min.js"></script>
   <script>
-    var raycaster, scene, camera, renderer, container;
-    var cube, material;
+    var raycaster, scene, camera, renderer;
+    var cube, material, INTERSECTED;
+    var prevX,prevY;
     
     var mouse = new THREE.Vector2();
     
@@ -35,19 +36,25 @@
       requestAnimationFrame(render);
 
       camera.lookAt(scene.position);
-      camera.updateMatrixWorld();
 
       cube.rotation.x += 0.01;
       cube.rotation.y += 0.01;
-      
+          
       raycaster.setFromCamera(mouse, camera);
-      var intersects = raycaster.intersectObjects(cube);
+      intersects = raycaster.intersectObjects(scene.children);
       if(intersects.length > 0){
-          alert("trafiony");
-//        for (var i = 0; i < intersects.length; i++) {
-//          intersects[i].object.material.color.set("red");
-//        }
-      }
+          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+          if (INTERSECTED != intersects[0].object) {
+            INTERSECTED = intersects[0].object;
+            temp = INTERSECTED.material.color.getHex();
+            INTERSECTED.material.color.set("red");
+          }
+        document.body.style.cursor = 'pointer';
+      } else {
+        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+        INTERSECTED = null;
+        document.body.style.cursor = 'auto';
+        }
       renderer.render(scene, camera);
     }
     
@@ -65,18 +72,15 @@
       container.appendChild(renderer.domElement);
       
       raycaster = new THREE.Raycaster();
-      
+
       var geometry = new THREE.BoxGeometry(100, 100, 100);
       material = new THREE.MeshBasicMaterial( {color: "green"});
       cube = new THREE.Mesh(geometry, material);
       cube.position.z = -500;
-    
       scene.add(cube);
-      
-      document.addEventListener("resize",onResize,false);
-      window.addEventListener("mousemove",onMove,false);
-      window.addEventListener('click', onClick, false);
-      
+
+      window.addEventListener("resize",onResize,false);
+      renderer.domElement.addEventListener("mousemove",onMove,false);
     }
     
     function onResize(){
@@ -96,10 +100,9 @@
       mouse.y = -(event.clientY/window.innerHeight)*2+1;
     }
     
-    function onClick(event){
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
-      alert(mouse.x+' '+mouse.y);
+    function onMouseDown(event){
+      mouse.x = event.clientX - window.innerWidth/2;
+      mouse.y = -(event.clientY - window.innerHeight/2);
     }
   </script>
 </body>
