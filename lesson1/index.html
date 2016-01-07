@@ -34,41 +34,29 @@
       var pMaterial = new THREE.SpriteMaterial({color: "green"});
       var point = new THREE.Sprite(pMaterial);
       point.scale.x = point.scale.y = 10;
-//      point = new THREE.Mesh(geometry, pMaterial);
       point.position.x = Px;
       point.position.y = Py;
       scene.add(point);
       points.push(point);
 
       geometry.vertices.push(point.position);
-        if (geometry.vertices.length >= 2) {
-          scene.remove(lines)
-      var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
-      scene.add(lines);
-        }
+                if (geometry.vertices.length >= 4) {
+                  var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+                  lines.name = 'linie'
+                  scene.add(lines);
+
+                  var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
+                  var path = new THREE.Path( curve.getPoints( 30 ) );
+                  var Cgeometry = path.createPointsGeometry( 30 );
+                  var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+                  var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
+                  cubicBezier.name = 'bezier';
+                  scene.add(cubicBezier);
+                }
     }
 
     function render() {
-//      requestAnimationFrame(render);
-
       camera.lookAt(scene.position);
-
-//      raycaster.setFromCamera(mouse, camera);
-//      intersects = raycaster.intersectObjects(points);
-//      if(intersects.length > 0){
-//          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
-//          if (INTERSECTED != intersects[0].object) {
-//            INTERSECTED = intersects[0].object;
-//            temp = INTERSECTED.material.color.getHex();
-//            INTERSECTED.material.color.set("red");
-//          }
-//        document.body.style.cursor = 'pointer';
-//      } else {
-//        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
-//        INTERSECTED = null;
-//        document.body.style.cursor = 'auto';
-//        }
-      console.log("rysuj");
       renderer.render(scene, camera);
     }
 
@@ -130,6 +118,17 @@
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
         SELECTED.position.copy(intersects[0].point.sub(offset));
+          geometry.verticesNeedUpdate = true;
+
+            scene.remove(scene.getObjectByName('bezier'));
+            var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
+            var path = new THREE.Path( curve.getPoints( 30 ) );
+            var Cgeometry = path.createPointsGeometry( 30 );
+            var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+            var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
+            cubicBezier.name = 'bezier';
+            scene.add(cubicBezier);
+
         }
         return;
       }
