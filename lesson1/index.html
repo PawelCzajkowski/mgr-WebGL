@@ -12,20 +12,21 @@
   <script src="js/dat.gui.min.js"></script>
   <script>
     var raycaster, scene, camera, renderer, plane;
-    var geometry, INTERSECTED, SELECTED;
+    var INTERSECTED, SELECTED;
     var points = [];
+    var geometry = new THREE.Geometry();
+    var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
     var userInterface = new function() {
-      this.size = '100';
-      this.kolor_tla = "#a6caf0";
-      this.rzutowanie = false;
+      this.Stopień = '2';
       this.Wyczyść = function() {resetScene()};
     }
     var gui = new dat.GUI();
 
+    gui.add(userInterface, "Stopień", {2: 2, 3: 3}).onChange(function() {resetScene();});
     gui.add(userInterface, 'Wyczyść');
 
     init();
@@ -39,21 +40,30 @@
       point.position.y = Py;
       scene.add(point);
       points.push(point);
-
       geometry.vertices.push(point.position);
-        if (geometry.vertices.length >= 4) {
-          var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
-          lines.name = 'linie'
-          scene.add(lines);
 
-          var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-          var path = new THREE.Path( curve.getPoints( 30 ) );
-          var Cgeometry = path.createPointsGeometry( 30 );
-          var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-          var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
-          cubicBezier.name = 'bezier';
-          scene.add(cubicBezier);
-        }
+      if(userInterface.Stopień === "2" && geometry.vertices.length == 3) {
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+        scene.add(lines);
+
+        var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
+        var path = new THREE.Path( curve.getPoints( 30 ) );
+        var Cgeometry = path.createPointsGeometry( 30 );
+        var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
+        quadraticBezier.name = 'bezier';
+        scene.add(quadraticBezier);
+      } else if(userInterface.Stopień === "3" && geometry.vertices.length == 4)
+      {
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+        scene.add(lines);
+
+        var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
+        var path = new THREE.Path( curve.getPoints( 30 ) );
+        Cgeometry = path.createPointsGeometry( 30 );
+        var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
+        cubicBezier.name = 'bezier';
+        scene.add(cubicBezier);
+      }
     }
 
     function render() {
@@ -91,10 +101,16 @@
     }
 
     function resetScene(){
-      geometry.vertices = [];
-      geometry.verticesNeedUpdate = true;
-      scene.children = [];
-      renderer.clear();
+      try {
+        //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
+        //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
+        delete geometry.vertices;
+        geometry = new THREE.Geometry();
+        scene.children = [];
+        renderer.clear();
+      } catch (err) {
+        console.log("Error: "+err.message);
+      }
     }
 
     function onResize(){
@@ -102,8 +118,6 @@
       camera.right = window.innerWidth/2;
       camera.top = window.innerHeight/2;
       camera.down = window.innerWidth/-2;
-
-
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -118,18 +132,28 @@
         requestAnimationFrame(render);
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
-        SELECTED.position.copy(intersects[0].point.sub(offset));
+          SELECTED.position.copy(intersects[0].point.sub(offset));
           geometry.verticesNeedUpdate = true;
 
           scene.remove(scene.getObjectByName('bezier'));
-          var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-          var path = new THREE.Path( curve.getPoints( 30 ) );
-          var Cgeometry = path.createPointsGeometry( 30 );
-          var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-          var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
-          cubicBezier.name = 'bezier';
-          scene.add(cubicBezier);
+          if(userInterface.Stopień === "2")
+          {
+            var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
+            var path = new THREE.Path( curve.getPoints( 30 ) );
+            var Cgeometry = path.createPointsGeometry( 30 );
 
+            var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
+            quadraticBezier.name = 'bezier';
+            scene.add(quadraticBezier);
+          } else if(userInterface.Stopień === "3")
+          {
+            var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
+            var path = new THREE.Path( curve.getPoints( 30 ) );
+            var Cgeometry = path.createPointsGeometry( 30 );
+            var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
+            cubicBezier.name = 'bezier';
+            scene.add(cubicBezier);
+          }
         }
         return;
       }
@@ -155,7 +179,7 @@
     function onClick(event){
       mouse.x = event.clientX - window.innerWidth/2;
       mouse.y = -(event.clientY - window.innerHeight/2);
-      if(geometry.vertices.length < 4){
+      if(geometry.vertices.length < Number(userInterface.Stopień)+1){
         addPoint(mouse.x, mouse.y);
       }
       render();
