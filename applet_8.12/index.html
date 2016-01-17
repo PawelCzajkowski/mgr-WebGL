@@ -1,13 +1,16 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Lesson 1</title>
-  <style>
-    body {margin: 0px}
-    canvas {width: "100%"; height: "100%"}
-  </style>
+  <title>Applet 8.12</title>
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
   </head>
 <body>
+  <ul class="navi">
+    <li style="margin: 5 10 0 10">Stopień krzywej</li>
+    <li><input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
+    <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
+    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+  </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/dat.gui.min.js"></script>
   <script>
@@ -20,14 +23,12 @@
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
-    var userInterface = new function() {
-      this.Stopień = '2';
-      this.Wyczyść = function() {resetScene()};
-    }
-    var gui = new dat.GUI();
+    var GUI = {stopien: 2}
 
-    gui.add(userInterface, "Stopień", {2: 2, 3: 3}).onChange(function() {resetScene();});
-    gui.add(userInterface, 'Wyczyść');
+    function setDeg(val) {
+      GUI.stopien = val;
+      resetScene();
+    }
 
     init();
     render();
@@ -60,11 +61,11 @@
       points.push(point);
       geometry.vertices.push(point.position);
 
-      if(userInterface.Stopień === "2" && geometry.vertices.length == 3) {
+      if(GUI.stopien == 2 && geometry.vertices.length == 3) {
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
         scene.add(lines);
         drawBezier(geometry);
-      } else if(userInterface.Stopień === "3" && geometry.vertices.length == 4)
+      } else if(GUI.stopien == 3 && geometry.vertices.length == 4)
       {
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
         scene.add(lines);
@@ -142,13 +143,7 @@
           geometry.verticesNeedUpdate = true;
 
           scene.remove(scene.getObjectByName('bezier'));
-          if(userInterface.Stopień === "2")
-          {
             drawBezier(geometry);
-          } else if(userInterface.Stopień === "3")
-          {
-            drawBezier(geometry);
-          }
         }
         return;
       }
@@ -174,7 +169,7 @@
     function onClick(event){
       mouse.x = event.clientX - window.innerWidth/2;
       mouse.y = -(event.clientY - window.innerHeight/2);
-      if(geometry.vertices.length < Number(userInterface.Stopień)+1){
+      if(geometry.vertices.length < Number(GUI.stopien)+1){
         addPoint(mouse.x, mouse.y);
       }
       render();
