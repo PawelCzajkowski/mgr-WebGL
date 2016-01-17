@@ -32,6 +32,24 @@
     init();
     render();
 
+    function drawBezier(geometry){
+      if (geometry.vertices.length == 3) {
+        var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
+        var path = new THREE.Path( curve.getPoints( 30 ) );
+        var Cgeometry = path.createPointsGeometry( 30 );
+        var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
+        quadraticBezier.name = 'bezier';
+        scene.add(quadraticBezier);
+      } else if (geometry.vertices.length == 4) {
+        var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
+        var path = new THREE.Path( curve.getPoints( 30 ) );
+        var Cgeometry = path.createPointsGeometry( 30 );
+        var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
+        cubicBezier.name = 'bezier';
+        scene.add(cubicBezier);
+      }
+    }
+
     function addPoint(Px, Py) {
       var pMaterial = new THREE.SpriteMaterial({color: "green"});
       var point = new THREE.Sprite(pMaterial);
@@ -45,24 +63,12 @@
       if(userInterface.Stopień === "2" && geometry.vertices.length == 3) {
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
         scene.add(lines);
-
-        var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
-        var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
-        quadraticBezier.name = 'bezier';
-        scene.add(quadraticBezier);
+        drawBezier(geometry);
       } else if(userInterface.Stopień === "3" && geometry.vertices.length == 4)
       {
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
         scene.add(lines);
-
-        var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        Cgeometry = path.createPointsGeometry( 30 );
-        var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
-        cubicBezier.name = 'bezier';
-        scene.add(cubicBezier);
+        drawBezier(geometry);
       }
     }
 
@@ -138,21 +144,10 @@
           scene.remove(scene.getObjectByName('bezier'));
           if(userInterface.Stopień === "2")
           {
-            var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
-            var path = new THREE.Path( curve.getPoints( 30 ) );
-            var Cgeometry = path.createPointsGeometry( 30 );
-
-            var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
-            quadraticBezier.name = 'bezier';
-            scene.add(quadraticBezier);
+            drawBezier(geometry);
           } else if(userInterface.Stopień === "3")
           {
-            var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-            var path = new THREE.Path( curve.getPoints( 30 ) );
-            var Cgeometry = path.createPointsGeometry( 30 );
-            var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
-            cubicBezier.name = 'bezier';
-            scene.add(cubicBezier);
+            drawBezier(geometry);
           }
         }
         return;
