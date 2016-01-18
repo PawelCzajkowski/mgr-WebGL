@@ -88,10 +88,10 @@
       initGeometryAndLine()
 
       window.addEventListener("resize",onResize,false);
-//      renderer.domElement.addEventListener("mousemove",onMove,false);
+      renderer.domElement.addEventListener("mousemove",onMove,false);
       renderer.domElement.addEventListener("click",onClick,false);
-//      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
-//      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
+      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
     }
 
     function resetScene(){
@@ -128,6 +128,10 @@
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
           SELECTED.position.copy(intersects[0].point.sub(offset));
+          var i = points.indexOf(SELECTED);
+          var vertex = lines.geometry.attributes.position.array;
+          vertex[i*3] = SELECTED.position.x;
+          vertex[i*3+1] = SELECTED.position.y;
           lines.geometry.attributes.position.needsUpdate = true;
         }
         return;
