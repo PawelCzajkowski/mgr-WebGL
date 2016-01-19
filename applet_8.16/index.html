@@ -10,14 +10,16 @@
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
-  <script src="../js/dat.gui.min.js"></script>
+  <script src="../js/math.js"></script>
   <script>
+    /*jshint globalstrict: true*/
+    "use strict";
     var raycaster, scene, camera, renderer, plane;
-    var INTERSECTED, SELECTED;
+    var INTERSECTED, SELECTED, temp;
     var points = [];
     var geometry, positions, lines;
 
-    var MAX_POINTS = 10;
+    var MAX_POINTS = 21;
     var idx = 0;
     var drawCount = 0;
 
@@ -34,6 +36,16 @@
     init();
     render();
 
+    function drawBezier(n,vertices){
+      var bezier = new BezierCurve(n, vertices);
+      var Cpath = new THREE.Path(bezier.getPoints(10*n));
+      var Cgeometry = Cpath.createPointsGeometry(10*n);
+      var Cmaterial = new THREE.LineBasicMaterial({color: "red"});
+      var curveObject = new THREE.Line(Cgeometry, Cmaterial);
+      curveObject.name = 'Bezier';
+      scene.add(curveObject);
+    }
+
     function addPoint(Px, Py) {
       var pMaterial = new THREE.SpriteMaterial({color: "green"});
       var point = new THREE.Sprite(pMaterial);
@@ -49,6 +61,12 @@
       vertex[idx++] = 0;
       lines.geometry.attributes.position.needsUpdate = true;
       lines.geometry.setDrawRange(0, ++drawCount);
+      if (drawCount>=3) {
+        try {
+          scene.remove(scene.getObjectByName('Bezier'));
+        } catch (e) { console.error(e.message)};
+        drawBezier(drawCount-1,vertex);
+      }
     }
 
     function render() {
@@ -66,7 +84,7 @@
     }
 
     function init(){
-      container = document.createElement("div");
+      var container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
       camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
@@ -96,9 +114,7 @@
 
     function resetScene(){
       try {
-        //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
-        //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
-        delete geometry;
+        geometry.clearDrawCalls;
         scene.children = [];
         renderer.clear();
         idx = 0, drawCount = 0;
@@ -119,40 +135,45 @@
     }
 
     function onMove(event){
-      event.preventDefault();
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
-      raycaster.setFromCamera(mouse, camera);
-      if (SELECTED) {
-        requestAnimationFrame(render);
-        var intersects = raycaster.intersectObject(plane);
-        if (intersects.length > 0) {
-          SELECTED.position.copy(intersects[0].point.sub(offset));
-          var i = points.indexOf(SELECTED);
-          var vertex = lines.geometry.attributes.position.array;
-          vertex[i*3] = SELECTED.position.x;
-          vertex[i*3+1] = SELECTED.position.y;
-          lines.geometry.attributes.position.needsUpdate = true;
-        }
-        return;
-      }
-
-      var intersects = raycaster.intersectObjects(points);
-      if(intersects.length > 0){
-          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
-          if (INTERSECTED != intersects[0].object) {
-            INTERSECTED = intersects[0].object;
-            temp = INTERSECTED.material.color.getHex();
-            INTERSECTED.material.color.set("red");
-            plane.position.copy( INTERSECTED.position );
+      if (document.getElementById("edit").checked)
+      {
+        event.preventDefault();
+        mouse.x = (event.clientX/window.innerWidth)*2-1;
+        mouse.y = -(event.clientY/window.innerHeight)*2+1;
+        raycaster.setFromCamera(mouse, camera);
+        if (SELECTED) {
+          requestAnimationFrame(render);
+          var intersects = raycaster.intersectObject(plane);
+          if (intersects.length > 0) {
+            SELECTED.position.copy(intersects[0].point.sub(offset));
+            var i = points.indexOf(SELECTED);
+            var vertex = lines.geometry.attributes.position.array;
+            vertex[i*3] = SELECTED.position.x;
+            vertex[i*3+1] = SELECTED.position.y;
+            lines.geometry.attributes.position.needsUpdate = true;
+            scene.remove(scene.getObjectByName('Bezier'));
+            drawBezier(drawCount-1, lines.geometry.attributes.position.array);
           }
-        document.body.style.cursor = 'pointer';
-      } else {
-        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
-        INTERSECTED = null;
-        document.body.style.cursor = 'auto';
+          return;
         }
-      render();
+
+        var intersects = raycaster.intersectObjects(points);
+        if(intersects.length > 0){
+            //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+            if (INTERSECTED != intersects[0].object) {
+              INTERSECTED = intersects[0].object;
+              temp = INTERSECTED.material.color.getHex();
+              INTERSECTED.material.color.set("red");
+              plane.position.copy( INTERSECTED.position );
+            }
+          document.body.style.cursor = 'pointer';
+        } else {
+          if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+          INTERSECTED = null;
+          document.body.style.cursor = 'auto';
+          }
+        render();
+      }
     }
 
     function onClick(event){
