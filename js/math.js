@@ -24,7 +24,7 @@ function dwumian(n, k) {
 
 function BezierCurve(stopien, tablica) {
   this.n = stopien;
-  this.geometry = tablica;
+  this.geometry = tablica.position.array;
 }
 
 BezierCurve.prototype = Object.create(THREE.Curve.prototype);
@@ -38,4 +38,16 @@ BezierCurve.prototype.getPoint  = function(t) {
     sumaY += val*this.geometry[i*3+1];
   }
   return new THREE.Vector2(sumaX, sumaY);
+};
+
+function BernsteinCurve(stopien, numer) {
+  this.n = stopien;
+  this.k = numer;
+}
+BernsteinCurve.prototype = Object.create(THREE.Curve.prototype);
+BernsteinCurve.prototype.constructor = BernsteinCurve;
+BernsteinCurve.prototype.getPoint = function(t) {
+  var k = (1-t);
+  var val = dwumian(this.n,this.k)*Math.pow(k,(this.n-this.k))*Math.pow(t,this.k);
+  return new THREE.Vector2(t*dim+(paddingH-dim), val*dim-paddingV);
 };

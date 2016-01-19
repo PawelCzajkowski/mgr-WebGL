@@ -5,6 +5,7 @@
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   </head>
 <body>
+
   <ul class="navi">
     <li style="margin: 10"><input type="checkbox" id="edit">Edytuj krzywą</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
@@ -19,19 +20,13 @@
     var points = [];
     var geometry, positions, lines;
 
+
     var MAX_POINTS = 21;
     var idx = 0;
     var drawCount = 0;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
-
-    var GUI = {stopien: 2}
-
-    function setDeg(val) {
-      GUI.stopien = val;
-      resetScene();
-    }
 
     init();
     render();
@@ -61,11 +56,11 @@
       vertex[idx++] = 0;
       lines.geometry.attributes.position.needsUpdate = true;
       lines.geometry.setDrawRange(0, ++drawCount);
-      if (drawCount>=3) {
+      if (drawCount>=2) {
         try {
           scene.remove(scene.getObjectByName('Bezier'));
         } catch (e) { console.error(e.message)};
-        drawBezier(drawCount-1,vertex);
+        drawBezier(drawCount-1,lines.geometry.attributes);
       }
     }
 
@@ -91,7 +86,7 @@
       camera.position.z = 100;
 
       renderer = new THREE.WebGLRenderer({antialias:true});
-      renderer.setClearColor("#a6caf0");
+      renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth,window.innerHeight);
       container.appendChild(renderer.domElement);
@@ -103,7 +98,7 @@
         );
       scene.add(plane);
 
-      initGeometryAndLine()
+      initGeometryAndLine();
 
       window.addEventListener("resize",onResize,false);
       renderer.domElement.addEventListener("mousemove",onMove,false);
@@ -152,7 +147,7 @@
             vertex[i*3+1] = SELECTED.position.y;
             lines.geometry.attributes.position.needsUpdate = true;
             scene.remove(scene.getObjectByName('Bezier'));
-            drawBezier(drawCount-1, lines.geometry.attributes.position.array);
+            drawBezier(drawCount-1, lines.geometry.attributes);
           }
           return;
         }
