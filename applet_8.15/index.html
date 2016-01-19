@@ -5,8 +5,7 @@
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   </head>
 <body>
-
-  <input class="suwak" type='range' id='suwak' min="0" max="1" step="0.01" value="0">
+  <input class="suwak" type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="drawPoints()" onclick="drawPoints()">
   <ul class="navi">
     <li style="margin: 10"><input type="checkbox" id="edit">Edytuj krzywą</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
@@ -15,12 +14,13 @@
   <script src="../js/math.js"></script>
   <script>
     /*jshint globalstrict: true*/
-    "use strict";
+//    "use strict";
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
     var points = [];
     var geometry, positions, lines, bernstein;
-
+    var bezier, Bernstein;
+    var Pgeometry = new THREE.Geometry();
 
     var MAX_POINTS = 21;
     var idx = 0;
@@ -41,7 +41,7 @@
     render();
 
     function drawBezier(n,vertices){
-      var bezier = new BezierCurve(n, vertices);
+      bezier = new BezierCurve(n, vertices);
       var Cpath = new THREE.Path(bezier.getPoints(10*n));
       var Cgeometry = Cpath.createPointsGeometry(10*n);
       var Cmaterial = new THREE.LineBasicMaterial({color: "red"});
@@ -52,7 +52,7 @@
       //rysuj funkcje Bernsteina
       var group = new THREE.Group();
       for (var i = 0; i <= n; i++) {
-        var Bernstein = new BernsteinCurve(n, i);
+        Bernstein = new BernsteinCurve(n, i);
         var Bpath = new THREE.Path(Bernstein.getPoints(100));
         var Bgeometry = Bpath.createPointsGeometry(100);
         var Bmaterial = new THREE.LineBasicMaterial({color: "purple"});
@@ -61,14 +61,6 @@
       }
       group.name = "bernstein";
       scene.add(group);
-    }
-    function getRandomColor() {
-      var letters = '0123456789ABCDEF'.split('');
-      var color = '#';
-      for (var i = 0; i < 6; i++ ) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
     }
 
     function addPoint(Px, Py) {
@@ -92,12 +84,36 @@
           scene.remove(scene.getObjectByName('bernstein'));
         } catch (e) { console.error(e.message)};
         drawBezier(drawCount-1,lines.geometry.attributes);
+        drawPoints();
       }
+    }
+
+    function drawPoints(){
+      //punkt
+      try {
+        scene.remove(scene.getObjectByName('punkt'));
+      } catch (e) {console.error(e.message)};
+      var vertex, point, graph;
+      var group = new THREE.Group();
+      Pgeometry = new THREE.Geometry();
+      var Pmaterial = new THREE.PointsMaterial({color: "blue", size: 2});
+      var val = document.getElementById('suwak').value;
+      for (var i = 0; i<drawCount; i++) {
+        graph = new BernsteinCurve(drawCount-1, i);
+        vertex = graph.getPoint(val);
+        Pgeometry.vertices.push( vertex );
+      }
+      vertex = bezier.getPoint(val);
+      Pgeometry.vertices.push( vertex );
+      point = new THREE.Points(Pgeometry, Pmaterial);
+      group.add(point);
+      group.name = 'punkt';
+      scene.add(group);
+      render();
     }
 
     function render() {
       camera.lookAt(scene.position);
-
       renderer.render(scene, camera);
     }
 
@@ -193,6 +209,8 @@
             vertex[i*3+1] = SELECTED.position.y;
             lines.geometry.attributes.position.needsUpdate = true;
             scene.remove(scene.getObjectByName('Bezier'));
+            scene.remove(scene.getObjectByName('punkt'));
+            drawPoints();
             drawBezier(drawCount-1, lines.geometry.attributes);
           }
           return;

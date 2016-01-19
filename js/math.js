@@ -37,7 +37,7 @@ BezierCurve.prototype.getPoint  = function(t) {
     sumaX += val*this.geometry[i*3];
     sumaY += val*this.geometry[i*3+1];
   }
-  return new THREE.Vector2(sumaX, sumaY);
+  return new THREE.Vector3(sumaX, sumaY, 0);
 };
 
 function BernsteinCurve(stopien, numer) {
@@ -49,5 +49,5 @@ BernsteinCurve.prototype.constructor = BernsteinCurve;
 BernsteinCurve.prototype.getPoint = function(t) {
   var k = (1-t);
   var val = dwumian(this.n,this.k)*Math.pow(k,(this.n-this.k))*Math.pow(t,this.k);
-  return new THREE.Vector2(t*dim+(paddingH-dim), val*dim-paddingV);
+  return new THREE.Vector3(t*dim+(paddingH-dim), val*dim-paddingV, 0);
 };
