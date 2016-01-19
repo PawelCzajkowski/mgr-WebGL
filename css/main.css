@@ -1,5 +1,5 @@
 body {
-  background-color: cornflowerblue;
+  background-color: lightgray;
   margin: 0px;
   font-family: sans-serif;
 }
@@ -34,4 +34,7 @@ li a:hover {
 }
 input {
   margin-left: 15px;
+}
+input.suwak {
+  position: absolute;
 }

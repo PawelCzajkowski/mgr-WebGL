@@ -1,0 +1,257 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Applet 8.12</title>
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
+  </head>
+<body>
+
+  <input class="suwak" type='range' id='suwak' min="0" max="1" step="0.01" value="0">
+  <ul class="navi">
+    <li style="margin: 10"><input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+  </ul>
+  <script src="../js/three.min.js"></script>
+  <script src="../js/math.js"></script>
+  <script>
+    /*jshint globalstrict: true*/
+    "use strict";
+    var raycaster, scene, camera, renderer, plane;
+    var INTERSECTED, SELECTED, temp;
+    var points = [];
+    var geometry, positions, lines, bernstein;
+
+
+    var MAX_POINTS = 21;
+    var idx = 0;
+    var drawCount = 0;
+
+    var mouse = new THREE.Vector2();
+    var offset = new THREE.Vector3();
+
+    //wykres funkcji Bernsteina
+    var dim = window.innerHeight*0.4;
+    var paddingH = 0.95*window.innerWidth/2;
+    var paddingV = window.innerHeight/2-0.1*window.innerHeight;
+    document.getElementById('suwak').style.width = dim;
+    document.getElementById('suwak').style.right = window.innerWidth/2 - paddingH;
+    document.getElementById('suwak').style.bottom = 0.05*window.innerHeight;
+
+    init();
+    render();
+
+    function drawBezier(n,vertices){
+      var bezier = new BezierCurve(n, vertices);
+      var Cpath = new THREE.Path(bezier.getPoints(10*n));
+      var Cgeometry = Cpath.createPointsGeometry(10*n);
+      var Cmaterial = new THREE.LineBasicMaterial({color: "red"});
+      var curveObject = new THREE.Line(Cgeometry, Cmaterial);
+      curveObject.name = 'Bezier';
+      scene.add(curveObject);
+
+      //rysuj funkcje Bernsteina
+      var group = new THREE.Group();
+      for (var i = 0; i <= n; i++) {
+        var Bernstein = new BernsteinCurve(n, i);
+        var Bpath = new THREE.Path(Bernstein.getPoints(100));
+        var Bgeometry = Bpath.createPointsGeometry(100);
+        var Bmaterial = new THREE.LineBasicMaterial({color: "purple"});
+        var bernsteinObject = new THREE.Line(Bgeometry, Bmaterial);
+        group.add(bernsteinObject);
+      }
+      group.name = "bernstein";
+      scene.add(group);
+    }
+    function getRandomColor() {
+      var letters = '0123456789ABCDEF'.split('');
+      var color = '#';
+      for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function addPoint(Px, Py) {
+      var pMaterial = new THREE.SpriteMaterial({color: "green"});
+      var point = new THREE.Sprite(pMaterial);
+      point.scale.x = point.scale.y = 10;
+      point.position.x = Px;
+      point.position.y = Py;
+      scene.add(point);
+      points.push(point);
+
+      var vertex = lines.geometry.attributes.position.array;
+      vertex[idx++] = Px;
+      vertex[idx++] = Py;
+      vertex[idx++] = 0;
+      lines.geometry.attributes.position.needsUpdate = true;
+      lines.geometry.setDrawRange(0, ++drawCount);
+      if (drawCount>=2) {
+        try {
+          scene.remove(scene.getObjectByName('Bezier'));
+          scene.remove(scene.getObjectByName('bernstein'));
+        } catch (e) { console.error(e.message)};
+        drawBezier(drawCount-1,lines.geometry.attributes);
+      }
+    }
+
+    function render() {
+      camera.lookAt(scene.position);
+
+      renderer.render(scene, camera);
+    }
+
+    function initGeometryAndLine() {
+      geometry = new THREE.BufferGeometry();
+      positions = new Float32Array(MAX_POINTS*3); //trzy wspolrzedne na wierzcholek
+      bernstein = new Float32Array(MAX_POINTS*3);
+      geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.addAttribute('bernstein', new THREE.BufferAttribute(bernstein, 3));
+
+      lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      scene.add(lines);
+
+      //wykres funkcji Bernsteina
+      var boxGeometry = new THREE.Geometry();
+      boxGeometry.vertices.push(
+        new THREE.Vector3(paddingH-dim, -paddingV+dim, 0),
+        new THREE.Vector3(paddingH-dim, -paddingV, 0),
+        new THREE.Vector3(paddingH, -paddingV, 0),
+        new THREE.Vector3(paddingH, -paddingV+dim, 0));
+      var box = new THREE.Line(boxGeometry, new THREE.LineBasicMaterial({color: "black"}));
+      scene.add(box);
+
+      render();
+    }
+
+    function init(){
+      var container = document.createElement("div");
+      document.body.appendChild(container);
+      scene = new THREE.Scene();
+      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+      camera.position.z = 100;
+
+      renderer = new THREE.WebGLRenderer({antialias:true});
+      renderer.setClearColor("white");
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth,window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
+          new THREE.MeshBasicMaterial( { visible: false } )
+        );
+      scene.add(plane);
+
+      initGeometryAndLine();
+
+      window.addEventListener("resize",onResize,false);
+      renderer.domElement.addEventListener("mousemove",onMove,false);
+      renderer.domElement.addEventListener("click",onClick,false);
+      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
+      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+    }
+
+    function resetScene(){
+      try {
+        geometry.clearDrawCalls;
+        scene.children = [];
+        renderer.clear();
+        idx = 0, drawCount = 0;
+        initGeometryAndLine();
+      } catch (err) {
+        console.log("Error: "+err.message);
+      }
+    }
+
+    function onResize(){
+      camera.left = window.innerWidth/-2;
+      camera.right = window.innerWidth/2;
+      camera.top = window.innerHeight/2;
+      camera.down = window.innerWidth/-2;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onMove(event){
+      if (document.getElementById("edit").checked)
+      {
+        event.preventDefault();
+        mouse.x = (event.clientX/window.innerWidth)*2-1;
+        mouse.y = -(event.clientY/window.innerHeight)*2+1;
+        raycaster.setFromCamera(mouse, camera);
+        if (SELECTED) {
+          requestAnimationFrame(render);
+          var intersects = raycaster.intersectObject(plane);
+          if (intersects.length > 0) {
+            SELECTED.position.copy(intersects[0].point.sub(offset));
+            var i = points.indexOf(SELECTED);
+            var vertex = lines.geometry.attributes.position.array;
+            vertex[i*3] = SELECTED.position.x;
+            vertex[i*3+1] = SELECTED.position.y;
+            lines.geometry.attributes.position.needsUpdate = true;
+            scene.remove(scene.getObjectByName('Bezier'));
+            drawBezier(drawCount-1, lines.geometry.attributes);
+          }
+          return;
+        }
+
+        var intersects = raycaster.intersectObjects(points);
+        if(intersects.length > 0){
+            //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+            if (INTERSECTED != intersects[0].object) {
+              INTERSECTED = intersects[0].object;
+              temp = INTERSECTED.material.color.getHex();
+              INTERSECTED.material.color.set("red");
+              plane.position.copy( INTERSECTED.position );
+            }
+          document.body.style.cursor = 'pointer';
+        } else {
+          if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+          INTERSECTED = null;
+          document.body.style.cursor = 'auto';
+          }
+        render();
+      }
+    }
+
+    function onClick(event){
+      mouse.x = event.clientX - window.innerWidth/2;
+      mouse.y = -(event.clientY - window.innerHeight/2);
+      var edit = document.getElementById("edit").checked;
+      if (MAX_POINTS > drawCount && !edit) {
+      addPoint(mouse.x, mouse.y);
+      render();
+      }
+    }
+
+    function onMouseDown(event){
+      event.preventDefault();
+      raycaster.setFromCamera(mouse, camera);
+      mouse.x = (event.clientX/window.innerWidth)*2-1;
+      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      var intersects = raycaster.intersectObjects(points);
+      if (intersects.length > 0) {
+        SELECTED = intersects[0].object;
+        var intersect = raycaster.intersectObject(plane);
+        if (intersect.length > 0) {
+          offset.copy(intersect[0].point).sub(plane.position);
+        }
+        document.body.style.cursor = 'move';
+      }
+      render();
+    }
+
+    function onMouseUp(event){
+      event.preventDefault();
+      if (INTERSECTED) {
+        plane.position.copy(INTERSECTED.position);
+        SELECTED = null;
+      }
+      document.body.style.cursor = 'auto';
+    }
+  </script>
+</body>
+</html>
