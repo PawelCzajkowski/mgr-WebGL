@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Applet 8.12</title>
+  <title>Applet 8.15</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   </head>
 <body>
@@ -14,12 +14,12 @@
   <script src="../js/math.js"></script>
   <script>
     /*jshint globalstrict: true*/
-//    "use strict";
+    "use strict";
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
     var points = [];
-    var geometry, positions, lines, bernstein;
-    var bezier, Bernstein;
+    var geometry, positions, lines;
+    var bezier, bernstein, Bernstein;
     var Pgeometry = new THREE.Geometry();
 
     var MAX_POINTS = 21;
@@ -49,7 +49,9 @@
       curveObject.name = 'Bezier';
       scene.add(curveObject);
 
+    }
       //rysuj funkcje Bernsteina
+    function drawBernstein(n) {
       var group = new THREE.Group();
       for (var i = 0; i <= n; i++) {
         Bernstein = new BernsteinCurve(n, i);
@@ -84,6 +86,7 @@
           scene.remove(scene.getObjectByName('bernstein'));
         } catch (e) { console.error(e.message)};
         drawBezier(drawCount-1,lines.geometry.attributes);
+        drawBernstein(drawCount-1);
         drawPoints();
       }
     }
@@ -135,6 +138,7 @@
         new THREE.Vector3(paddingH, -paddingV, 0),
         new THREE.Vector3(paddingH, -paddingV+dim, 0));
       var box = new THREE.Line(boxGeometry, new THREE.LineBasicMaterial({color: "black"}));
+      box.name = "wykres";
       scene.add(box);
 
       render();
@@ -171,10 +175,11 @@
 
     function resetScene(){
       try {
-        geometry.clearDrawCalls;
+        geometry.dispose();
         scene.children = [];
         renderer.clear();
         idx = 0, drawCount = 0;
+        points = [];
         initGeometryAndLine();
       } catch (err) {
         console.log("Error: "+err.message);
