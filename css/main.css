@@ -32,9 +32,11 @@ li a:hover {
   background-color: #555;
   color: white;
 }
-input {
-  margin-left: 15px;
+#suwak {
+  position: static;
+  width: 98%;
 }
-input.suwak {
+#label {
+  text-align: justify;
   position: absolute;
 }
