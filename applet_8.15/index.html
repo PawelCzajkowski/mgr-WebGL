@@ -12,7 +12,7 @@
   <ul id="navi">
     <li style="margin: 10">Stopień krzywej: <span id="stopien_krzywej">0</span></li>
     <li style="margin: 10 10 10 0"><input type="checkbox" id="edit">Edytuj krzywą</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/math.js"></script>
@@ -178,20 +178,6 @@
       renderer.domElement.addEventListener("click",onClick,false);
       renderer.domElement.addEventListener("mousedown",onMouseDown,false);
       renderer.domElement.addEventListener("mouseup",onMouseUp,false);
-    }
-
-    function resetScene(){
-      try {
-        geometry.dispose();
-        scene.children = [];
-        renderer.clear();
-        idx = 0, drawCount = 0;
-        points = [];
-        document.getElementById("stopien_krzywej").innerHTML = 0;
-        initGeometryAndLine();
-      } catch (err) {
-        console.log("Error: "+err.message);
-      }
     }
 
     function onResize(){

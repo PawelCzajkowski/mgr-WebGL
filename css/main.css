@@ -34,7 +34,8 @@ li a:hover {
 }
 #suwak {
   position: static;
-  width: 98%;
+  width: 95%;
+  padding-left: 5;
 }
 #label {
   text-align: justify;

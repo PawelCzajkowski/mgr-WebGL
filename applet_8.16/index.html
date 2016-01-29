@@ -8,7 +8,7 @@
 
   <ul id="navi">
     <li style="margin: 10"><input type="checkbox" id="edit">Edytuj krzywą</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/math.js"></script>
@@ -105,19 +105,6 @@
       renderer.domElement.addEventListener("click",onClick,false);
       renderer.domElement.addEventListener("mousedown",onMouseDown,false);
       renderer.domElement.addEventListener("mouseup",onMouseUp,false);
-    }
-
-    function resetScene(){
-      try {
-        geometry.clearDrawCalls;
-        scene.children = [];
-        renderer.clear();
-        idx = 0, drawCount = 0;
-        points = [];
-        initGeometryAndLine();
-      } catch (err) {
-        console.log("Error: "+err.message);
-      }
     }
 
     function onResize(){
