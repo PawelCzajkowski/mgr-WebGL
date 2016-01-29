@@ -25,19 +25,38 @@ function dwumian(n, k) {
 function BezierCurve(stopien, tablica) {
   this.n = stopien;
   this.geometry = tablica.position.array;
+  try {
+    this.weight = tablica.weight.array;
+  } catch (e) {
+    this.weight = [];
+    console.error(e.message);
+  }
 }
 
 BezierCurve.prototype = Object.create(THREE.Curve.prototype);
 BezierCurve.prototype.constructor = BezierCurve;
 BezierCurve.prototype.getPoint  = function(t) {
-  var val = 0, sumaX = 0, sumaY = 0;
+  var val = 0, sumaX = 0, sumaY = 0, suma = 0;
   var k = (1-t);
-  for (var i=0; i<=this.n; i++) {
-    val = dwumian(this.n,i)*Math.pow(k,(this.n-i))*Math.pow(t,i);
-    sumaX += val*this.geometry[i*3];
-    sumaY += val*this.geometry[i*3+1];
+  if (this.weight.length < 1)
+  {
+    for (var i=0; i<=this.n; i++) {
+      val = dwumian(this.n,i)*Math.pow(k,(this.n-i))*Math.pow(t,i);
+      sumaX += val*this.geometry[i*3];
+      sumaY += val*this.geometry[i*3+1];
+    }
+    return new THREE.Vector3(sumaX, sumaY, 0);
   }
-  return new THREE.Vector3(sumaX, sumaY, 0);
+  else
+  {
+    for (var i=0; i<=this.n; i++) {
+      val = dwumian(this.n,i)*Math.pow(k,(this.n-i))*Math.pow(t,i);
+      suma += val*this.weight[i];
+      sumaX += val*this.geometry[i*3]*this.weight[i];
+      sumaY += val*this.geometry[i*3+1]*this.weight[i];
+    }
+    return new THREE.Vector3(sumaX/suma, sumaY/suma, 0);
+  }
 };
 
 function BernsteinCurve(stopien, numer) {

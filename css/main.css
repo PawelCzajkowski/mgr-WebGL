@@ -6,7 +6,7 @@ body {
 canvas {
   width: "100%"; height: "100%"
 }
-ul.navi {
+#navi {
   list-style-type: none;
   position: absolute;
   margin: 0;
@@ -39,4 +39,9 @@ li a:hover {
 #label {
   text-align: justify;
   position: absolute;
+}
+input[type=number] {
+  display: inline-block;
+  margin-left: 10;
+  width: 60;
 }

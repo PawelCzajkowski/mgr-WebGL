@@ -1,14 +1,14 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Applet 8.16</title>
+  <title>Applet 8.20</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   </head>
 <body>
 
   <ul id="navi">
     <li style="margin: 10"><input type="checkbox" id="edit">Edytuj krzywą</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/math.js"></script>
@@ -18,7 +18,7 @@
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
     var points = [];
-    var geometry, positions, lines;
+    var geometry, positions, lines, weights;
 
 
     var MAX_POINTS = 21;
@@ -31,10 +31,18 @@
     init();
     render();
 
+    function changeWeight(id) {
+      var item = document.getElementById(id);
+      lines.geometry.attributes.weight.array[id] = item.value;
+      scene.remove(scene.getObjectByName('Bezier'));
+      drawBezier(drawCount-1, lines.geometry.attributes);
+      render();
+    }
+
     function drawBezier(n,vertices){
       var bezier = new BezierCurve(n, vertices);
-      var Cpath = new THREE.Path(bezier.getPoints(10*n));
-      var Cgeometry = Cpath.createPointsGeometry(10*n);
+      var Cpath = new THREE.Path(bezier.getPoints(20*n));
+      var Cgeometry = Cpath.createPointsGeometry(20*n);
       var Cmaterial = new THREE.LineBasicMaterial({color: "red"});
       var curveObject = new THREE.Line(Cgeometry, Cmaterial);
       curveObject.name = 'Bezier';
@@ -49,6 +57,30 @@
       point.position.y = Py;
       scene.add(point);
       points.push(point);
+
+      //utworzynie dynamiczne pola input w liscie
+      var list = document.getElementById('navi');
+      var item = document.createElement("LI");
+
+
+      var item2 = document.createElement("SPAN");
+      var text = document.createTextNode(idx/3+1);
+      item2.appendChild(text);
+      item.appendChild(item2);
+
+      item2 = document.createElement("INPUT");
+      item2.setAttribute("type", "number");
+      item2.setAttribute("id", idx/3);
+      item2.setAttribute("onchange", 'changeWeight(this.id)');
+      item2.setAttribute("value", 5);
+      item2.setAttribute("min", 1);
+      item2.setAttribute("max", 10);
+      item2.setAttribute("step", 0.1);
+      item2.setAttribute("size", 3);
+      item.appendChild(item2);
+      item.setAttribute("align", "center");
+      list.insertBefore(item, list.childNodes[list.childNodes.length-4]);
+      lines.geometry.attributes.weight.array[idx/3]=5;
 
       var vertex = lines.geometry.attributes.position.array;
       vertex[idx++] = Px;
@@ -72,7 +104,9 @@
     function initGeometryAndLine() {
       geometry = new THREE.BufferGeometry();
       positions = new Float32Array(MAX_POINTS*3); //trzy wspolrzedne na wierzcholek
+      weights = new Float32Array(MAX_POINTS);
       geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.addAttribute('weight', new THREE.BufferAttribute(weights, 1));
 
       lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
       scene.add(lines);
@@ -105,19 +139,6 @@
       renderer.domElement.addEventListener("click",onClick,false);
       renderer.domElement.addEventListener("mousedown",onMouseDown,false);
       renderer.domElement.addEventListener("mouseup",onMouseUp,false);
-    }
-
-    function resetScene(){
-      try {
-        geometry.clearDrawCalls;
-        scene.children = [];
-        renderer.clear();
-        idx = 0, drawCount = 0;
-        points = [];
-        initGeometryAndLine();
-      } catch (err) {
-        console.log("Error: "+err.message);
-      }
     }
 
     function onResize(){
