@@ -78,6 +78,18 @@
       scene.add(lines);
     }
 
+    function webglAvailable() {
+      try {
+        var canvas = document.createElement( 'canvas' );
+        return !!( window.WebGLRenderingContext && (
+          canvas.getContext( 'webgl' ) ||
+          canvas.getContext( 'experimental-webgl' ) )
+                 );
+      } catch ( e ) {
+        return false;
+      }
+    }
+
     function init(){
       var container = document.createElement("div");
       document.body.appendChild(container);
@@ -85,7 +97,11 @@
       camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
       camera.position.z = 100;
 
-      renderer = new THREE.WebGLRenderer({antialias:true});
+      if ( webglAvailable() ) {
+        renderer = new THREE.WebGLRenderer({antialias:true});
+      } else {
+        renderer = new THREE.CanvasRenderer();
+      }
       renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth,window.innerHeight);
