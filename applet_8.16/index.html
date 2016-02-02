@@ -12,6 +12,8 @@
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/math.js"></script>
+  <script src="../js/CanvasRenderer.js"></script>
+  <script src="../js/Projector.js"></script>
   <script>
     /*jshint globalstrict: true*/
     "use strict";
@@ -19,7 +21,7 @@
     var INTERSECTED, SELECTED, temp;
     var points = [];
     var geometry, positions, lines;
-
+    var isWebGL;
 
     var MAX_POINTS = 21;
     var idx = 0;
@@ -50,17 +52,27 @@
       scene.add(point);
       points.push(point);
 
-      var vertex = lines.geometry.attributes.position.array;
+      var vertex = geometry.attributes.position.array;
       vertex[idx++] = Px;
       vertex[idx++] = Py;
       vertex[idx++] = 0;
-      lines.geometry.attributes.position.needsUpdate = true;
-      lines.geometry.setDrawRange(0, ++drawCount);
+      geometry.attributes.position.needsUpdate = true;
+      if (isWebGL) {
+        geometry.setDrawRange(0, ++drawCount);
+        scene.add(lines);
+      } else {
+        scene.remove(scene.getObjectByName("Linia"));
+        lines.vertices.push(new THREE.Vector3(vertex[drawCount*3], vertex[drawCount*3+1], 0));
+        var line = new THREE.Line(lines, new THREE.LineBasicMaterial({color: "black"}));
+        line.name = "Linia";
+        scene.add(line);
+        ++drawCount;
+      }
       if (drawCount>=2) {
         try {
           scene.remove(scene.getObjectByName('Bezier'));
         } catch (e) { console.error(e.message)};
-        drawBezier(drawCount-1,lines.geometry.attributes);
+        drawBezier(drawCount-1,geometry.attributes);
       }
     }
 
@@ -74,17 +86,20 @@
       positions = new Float32Array(MAX_POINTS*3); //trzy wspolrzedne na wierzcholek
       geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-      lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
-      scene.add(lines);
+      if (isWebGL) {
+        lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      } else {
+        lines = new THREE.Geometry();
+      }
     }
 
     function webglAvailable() {
       try {
         var canvas = document.createElement( 'canvas' );
-        return !!( window.WebGLRenderingContext && (
+        isWebGL = !!( window.WebGLRenderingContext && (
           canvas.getContext( 'webgl' ) ||
-          canvas.getContext( 'experimental-webgl' ) )
-                 );
+          canvas.getContext( 'experimental-webgl' )));
+        return isWebGL;
       } catch ( e ) {
         return false;
       }
@@ -146,12 +161,17 @@
           if (intersects.length > 0) {
             SELECTED.position.copy(intersects[0].point.sub(offset));
             var i = points.indexOf(SELECTED);
-            var vertex = lines.geometry.attributes.position.array;
+            var vertex = geometry.attributes.position.array;
             vertex[i*3] = SELECTED.position.x;
             vertex[i*3+1] = SELECTED.position.y;
-            lines.geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.position.needsUpdate = true;
+            if (!isWebGL) {
+              lines.vertices[i].x = SELECTED.position.x;
+              lines.vertices[i].y = SELECTED.position.y;
+              lines.verticesNeedUpdate = true;
+            }
             scene.remove(scene.getObjectByName('Bezier'));
-            drawBezier(drawCount-1, lines.geometry.attributes);
+            drawBezier(drawCount-1, geometry.attributes);
           }
           return;
         }
