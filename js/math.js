@@ -22,14 +22,13 @@ function dwumian(n, k) {
   return trojkatPascala[n][k];
 }
 
-function BezierCurve(stopien, tablica) {
+function BezierCurve(stopien, tablica, waga) {
   this.n = stopien;
   this.geometry = tablica.position.array;
-  try {
+  if (typeof waga === "undefined") {
+    this.weight = null;
+  } else {
     this.weight = tablica.weight.array;
-  } catch (e) {
-    this.weight = [];
-    console.error(e.message);
   }
 }
 
@@ -38,7 +37,7 @@ BezierCurve.prototype.constructor = BezierCurve;
 BezierCurve.prototype.getPoint  = function(t) {
   var val = 0, sumaX = 0, sumaY = 0, suma = 0;
   var k = (1-t);
-  if (this.weight.length < 1)
+  if (this.weight === null)
   {
     for (var i=0; i<=this.n; i++) {
       val = dwumian(this.n,i)*Math.pow(k,(this.n-i))*Math.pow(t,i);
