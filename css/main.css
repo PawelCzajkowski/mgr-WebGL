@@ -15,6 +15,8 @@ canvas {
   padding: 0;
   width: auto;
   background-color: #f1f1f1;
+  border-width: thin;
+  border-style: groove;
 }
 li {
   display: block;
@@ -44,4 +46,19 @@ input[type=number] {
   display: inline-block;
   margin-left: 10;
   width: 60;
+}
+div.suwak {
+  display: block;
+  text-align: center;
+  position: absolute;
+  padding: 5;
+  margin-top: 150;
+  right: 1;
+  width: 200;
+  background-color: #f1f1f1;
+  border-width: thin;
+  border-style: groove;
+}
+input.suwak {
+  margin-right: 20;
 }
