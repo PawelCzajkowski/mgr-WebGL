@@ -11,14 +11,14 @@
     <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
-  <div class="suwak">Przesunięcie punktu<input type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="drawLines()" onclick="drawLines()">
+  <div class="suwak">Przesunięcie punktu<input type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="draw_deCasteljau()" onclick="draw_deCasteljau()">
   </div>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
   <script src="../js/Projector.js"></script>
   <script>
     var raycaster, scene, camera, renderer, plane;
-    var INTERSECTED, SELECTED, isFinished = false;
+    var INTERSECTED, SELECTED;
     var points = [];
     var geometry = new THREE.Geometry();
     var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
@@ -37,15 +37,8 @@
     init();
     render();
 
-    function drawLines(){
+    function draw_deCasteljau(){
       var val = document.getElementById('suwak').value;
-      if (document.getElementsByName("stopien")[0].checked) {
-        GUI.stopien = 2;
-      } else {GUI.stopien = 3};
-      geometry = new THREE.Geometry();
-      for (var i=0; i < points.length; i++) {
-        geometry.vertices.push(points[i].position);
-      }
       try {
         group.children = [];
       } catch (e) { console.error(e.message)};
@@ -53,6 +46,13 @@
         algorytm_dC( geometry.vertices, GUI.stopien, val);
       }
       render();
+      if (document.getElementsByName("stopien")[0].checked) {
+        GUI.stopien = 2;
+      } else {GUI.stopien = 3};
+      geometry = new THREE.Geometry();
+      for (var i=0; i < points.length; i++) {
+        geometry.vertices.push(points[i].position);
+      }
     }
 
     function algorytm_dC( Arr, deg, val) {
@@ -105,6 +105,17 @@
       group.add(point);
     }
 
+    function drawLine(geometry) {
+      try {
+        scene.remove(scene.getObjectByName("wielobok"));
+      } catch (e) {
+        console.error(e.message);
+      }
+      var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      lines.name = "wielobok";
+      scene.add(lines);
+    }
+
     function addPoint(Px, Py) {
       var pMaterial = new THREE.SpriteMaterial({color: "green"});
       var point = new THREE.Sprite(pMaterial);
@@ -116,13 +127,11 @@
       geometry.vertices.push(point.position);
 
       if(GUI.stopien == 2 && geometry.vertices.length == 3) {
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
-        scene.add(lines);
+        drawLine(geometry);
         drawBezier(geometry);
       } else if(GUI.stopien == 3 && geometry.vertices.length == 4)
       {
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
-        scene.add(lines);
+        drawLine(geometry);
         drawBezier(geometry);
       }
     }
@@ -173,7 +182,10 @@
       scene.add(group);
 
       window.addEventListener("resize",onResize,false);
+      renderer.domElement.addEventListener("mousemove",onMove,false);
       renderer.domElement.addEventListener("click",onClick,false);
+      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
+      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
     }
 
     function resetScene(){
@@ -202,6 +214,43 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    function onMove(event){
+      event.preventDefault();
+      mouse.x = (event.clientX/window.innerWidth)*2-1;
+      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      raycaster.setFromCamera(mouse, camera);
+      if (SELECTED) {
+        requestAnimationFrame(render);
+        var intersects = raycaster.intersectObject(plane);
+        if (intersects.length > 0) {
+          SELECTED.position.copy(intersects[0].point.sub(offset));
+          geometry.verticesNeedUpdate = true;
+          scene.remove(scene.getObjectByName('bezier'));
+          drawLine(geometry);
+          drawBezier(geometry);
+          draw_deCasteljau();
+        }
+        return;
+      }
+
+      var intersects = raycaster.intersectObjects(points);
+      if(intersects.length > 0){
+        //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+        if (INTERSECTED != intersects[0].object) {
+          INTERSECTED = intersects[0].object;
+          temp = INTERSECTED.material.color.getHex();
+          INTERSECTED.material.color.set("red");
+          plane.position.copy( INTERSECTED.position );
+        }
+        document.body.style.cursor = 'pointer';
+      } else {
+        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+        INTERSECTED = null;
+        document.body.style.cursor = 'auto';
+      }
+      render();
+    }
+
     function onClick(event){
       mouse.x = event.clientX - window.innerWidth/2;
       mouse.y = -(event.clientY - window.innerHeight/2);
@@ -209,6 +258,32 @@
         addPoint(mouse.x, mouse.y);
       }
       render();
+    }
+
+    function onMouseDown(event){
+      event.preventDefault();
+      raycaster.setFromCamera(mouse, camera);
+      mouse.x = (event.clientX/window.innerWidth)*2-1;
+      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      var intersects = raycaster.intersectObjects(points);
+      if (intersects.length > 0) {
+        SELECTED = intersects[0].object;
+        var intersect = raycaster.intersectObject(plane);
+        if (intersect.length > 0) {
+          offset.copy(intersect[0].point).sub(plane.position);
+        }
+        document.body.style.cursor = 'move';
+      }
+      render();
+    }
+
+    function onMouseUp(event){
+      event.preventDefault();
+      if (INTERSECTED) {
+        plane.position.copy(INTERSECTED.position);
+        SELECTED = null;
+      }
+      document.body.style.cursor = 'auto';
     }
   </script>
 </body>
