@@ -21,6 +21,7 @@ canvas {
 li {
   display: block;
   font-size: 18;
+  text-align: center;
 }
 li a {
   border: 1px solid darkgreen;
@@ -45,7 +46,7 @@ li a:hover {
 input[type=number] {
   display: inline-block;
   margin-left: 10;
-  width: 60;
+  width: 40;
 }
 div.suwak {
   display: block;
