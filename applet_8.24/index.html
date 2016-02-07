@@ -147,6 +147,7 @@
         geometry = new THREE.Geometry();
         scene.children = [];
         renderer.clear();
+        (document.getElementById('drugi').checked) ? GUI.stopien = 2 : GUI.stopien = 3;
       } catch (err) {
         console.error("Error: "+err.message);
       }
