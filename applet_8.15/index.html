@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -5,13 +6,13 @@
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   </head>
 <body>
-  <div id="labelV" style="position: absolute">B(t)</div>
+  <div id="labelV" style="position: fixed">B(t)</div>
   <div id="label">0 t 1<span style="width:100%; diplay: inline-block"></span>
     <input class="suwak" type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="drawPoints()" onclick="drawPoints()">
   </div>
   <ul id="navi">
-    <li style="margin: 10">Stopień krzywej: <span id="stopien_krzywej">0</span></li>
-    <li style="margin: 10 10 10 0"><input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li style="margin: 10px">Stopień krzywej: <span id="stopien_krzywej">0</span></li>
+    <li><input type="checkbox" id="edit">Edytuj krzywą</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -40,11 +41,11 @@
     var dim = window.innerHeight*0.4;
     var paddingH = 0.95*window.innerWidth/2;
     var paddingV = window.innerHeight/2-0.1*window.innerHeight;
-    document.getElementById('label').style.width = dim;
-    document.getElementById('label').style.right = window.innerWidth/2 - paddingH;
-    document.getElementById('label').style.bottom = window.innerHeight/2 - dim - 60;
-    document.getElementById('labelV').style.right = window.innerWidth/2 - paddingH + dim + 25;
-    document.getElementById('labelV').style.bottom = 0.05*window.innerHeight+dim/2;
+    document.getElementById('label').style.width = dim + 'px';
+    document.getElementById('label').style.right = (window.innerWidth/2 - paddingH) + 'px';
+    document.getElementById('label').style.bottom = (window.innerHeight/2 - dim - 60) + 'px';
+    document.getElementById('labelV').style.right = (window.innerWidth/2 - paddingH + dim + 25) + 'px';
+    document.getElementById('labelV').style.bottom = (0.05*window.innerHeight+dim/2) + 'px';
 
     init();
     render();

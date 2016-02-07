@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -7,7 +8,7 @@
 <body>
 
   <ul id="navi">
-    <li style="padding: 7">Stopień krzywej: <input type="number" id="stopien" onchange="changeDegree(this.value)" value="3" size="2" min="1"></li>
+    <li style="padding: 7px">Stopień krzywej: <input type="number" id="stopien" onchange="changeDegree(this.value)" value="3" size="2" min="1"></li>
     <li style="margin: 10"><input type="checkbox" id="edit" >Edytuj krzywą</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
@@ -75,7 +76,7 @@
       item2.setAttribute("max", 10);
       item2.setAttribute("step", 0.1);
       item2.setAttribute("size", 3);
-      item2.setAttribute("width", "center");
+//      item2.setAttribute("width", "center");
       item.appendChild(item2);
       list.insertBefore(item, list.childNodes[list.childNodes.length-4]);
       idx++;

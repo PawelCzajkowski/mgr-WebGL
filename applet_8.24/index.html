@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -6,13 +7,11 @@
   </head>
 <body>
   <ul id="navi">
-    <li style="margin: 5 10 0 10">Stopień krzywej</li>
+    <li style="margin: 5px 10px 0 10px">Stopień krzywej</li>
     <li><input type="radio" id='drugi' name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
     <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
-  </ul>
-  <ul id="navi" style="display: block; margin-top: 120">
-    <li><a href="#" onclick="algorytm_dC( geometry.vertices, GUI);">Dalej</a></li>
+    <li><a href="#" style="margin-top: 5px" onclick="algorytm_dC( geometry.vertices, GUI);">Dalej</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
