@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Applet 9.14</title>
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
+  </head>
+<body>
+  <ul id="navi">
+    <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
+    <li style="padding: 8px"><input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+  </ul>
+  <div id="popup">
+    <div id="form">
+      <form>
+        Liczba wierszy:
+        <input id="wiersze" type="number" min="2"><br>
+        Liczba kolumn:
+        <input id="kolumny" type="number" min="2"><br>
+        <button type="button" onclick="createSurface()">Twórz</button>
+      </form>
+    </div>
+  </div>
+  <script src="../js/three.min.js"></script>
+  <script src="../js/CanvasRenderer.js"></script>
+  <script src="../js/Projector.js"></script>
+  <script src="../js/OrthographicTrackballControls.js"></script>
+  <script>
+    var raycaster, scene, camera, renderer, plane, controls;
+    var INTERSECTED, SELECTED, req;
+    var pressed = false;
+
+    var mouse = new THREE.Vector2();
+    var offset = new THREE.Vector3();
+
+    init();
+    render();
+
+    function show_div() {
+      document.getElementById('popup').style.visibility = "visible";
+    }
+
+    function createSurface() {
+      resetScene();
+      var points = new THREE.Group();
+      scene.add(points);
+      document.getElementById('popup').style.visibility = 'hidden';
+      var cols = Number(document.getElementById("kolumny").value);
+      var rows = Number(document.getElementById("wiersze").value);
+      var pMaterial = new THREE.SpriteMaterial({color: "green"});
+
+      var size = window.innerHeight*0.2;
+      var controlPoints = new THREE.Geometry();
+      var rowStep = 2*size/(rows-1);
+      var colStep = 2*size/(cols-1);
+      for (var i = -size; i <=size; i += colStep){
+        for (var j = -size; j <= size; j += rowStep) {
+          var point = new THREE.Sprite(pMaterial);
+          point.scale.x = point.scale.y = 10;
+          point.position.x = i;
+          point.position.y = j;
+          point.position.z = 0;
+          points.add(point);
+
+          controlPoints.vertices.push(point.position);
+        }
+      }
+    render();
+    }
+
+    function render() {
+      camera.lookAt(scene.position);
+      renderer.render(scene, camera);
+    }
+
+    function animate() {
+      req = requestAnimationFrame( animate );
+      controls.update();
+      render();
+    }
+
+    function webglAvailable() {
+      try {
+        var canvas = document.createElement( 'canvas' );
+        return !!( window.WebGLRenderingContext && (
+          canvas.getContext( 'webgl' ) ||
+          canvas.getContext( 'experimental-webgl' ) )
+                 );
+      } catch ( e ) {
+        return false;
+      }
+    }
+
+    function init(){
+      container = document.createElement("div");
+      document.body.appendChild(container);
+      scene = new THREE.Scene();
+      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+      camera.position.z = -window.innerHeight/2;
+
+      if ( webglAvailable() ) {
+        renderer = new THREE.WebGLRenderer({antialias:true});
+      } else {
+        renderer = new THREE.CanvasRenderer();
+      }
+      renderer.setClearColor("white");
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth,window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrthographicTrackballControls( camera, renderer.domElement );
+      controls.enableZoom = false;
+
+      raycaster = new THREE.Raycaster();
+
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
+          new THREE.MeshBasicMaterial( { visible: false } )
+        );
+      scene.add(plane);
+
+      window.addEventListener("resize",onResize,false);
+      renderer.domElement.addEventListener("mousemove",onMove,false);
+      renderer.domElement.addEventListener("click",onClick,false);
+      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
+      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+    }
+
+    function resetScene(){
+      try {
+        scene.children = [];
+        controls.reset();
+        renderer.clear();
+      } catch (err) {
+        console.log("Error: "+err.message);
+      }
+    }
+
+    function onResize(){
+      camera.left = window.innerWidth/-2;
+      camera.right = window.innerWidth/2;
+      camera.top = window.innerHeight/2;
+      camera.down = window.innerWidth/-2;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onMove(event){
+      if (document.getElementById("edit").checked) {
+        event.preventDefault();
+        mouse.x = (event.clientX/window.innerWidth)*2-1;
+        mouse.y = -(event.clientY/window.innerHeight)*2+1;
+        raycaster.setFromCamera(mouse, camera);
+        if (SELECTED) {
+          var intersects = raycaster.intersectObject(plane);
+          if (intersects.length > 0) {
+            SELECTED.position.copy(intersects[0].point.sub(offset));
+            drawBezier(geometries);
+          }
+          return;
+        }
+
+        var intersects = raycaster.intersectObjects();
+        if(intersects.length > 0){
+            //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+            if (INTERSECTED != intersects[0].object) {
+              INTERSECTED = intersects[0].object;
+              temp = INTERSECTED.material.color.getHex();
+              INTERSECTED.material.color.set("red");
+              plane.position.copy( INTERSECTED.position );
+            }
+          document.body.style.cursor = 'pointer';
+        } else {
+          if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+          INTERSECTED = null;
+          document.body.style.cursor = 'auto';
+          }
+        render();
+      }
+    }
+
+    function onClick(event){
+      mouse.x = event.clientX - window.innerWidth/2;
+      mouse.y = -(event.clientY - window.innerHeight/2);
+      render();
+    }
+
+    function onMouseDown(event){
+      req = requestAnimationFrame( animate );
+      event.preventDefault();
+      raycaster.setFromCamera(mouse, camera);
+      mouse.x = (event.clientX/window.innerWidth)*2-1;
+      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      var intersects = raycaster.intersectObjects();
+      if (intersects.length > 0) {
+        SELECTED = intersects[0].object;
+        var intersect = raycaster.intersectObject(plane);
+        if (intersect.length > 0) {
+          offset.copy(intersect[0].point).sub(plane.position);
+        }
+        document.body.style.cursor = 'move';
+      }
+      render();
+    }
+
+    function onMouseUp(event){
+      event.preventDefault();
+      if (INTERSECTED) {
+        plane.position.copy(INTERSECTED.position);
+        SELECTED = null;
+      }
+      document.body.style.cursor = 'auto';
+      cancelAnimationFrame(req);
+    }
+  </script>
+</body>
+</html>
