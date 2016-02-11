@@ -103,6 +103,7 @@
           controlPoints.push(point);
           GoP.add(point);
 
+          pMaterial = new THREE.SpriteMaterial({color: "blue"});
           point = new THREE.Sprite(pMaterial);
           point.position.subVectors(points[0].position, points[2].position);
           point.position.divideScalar(3);
@@ -126,6 +127,7 @@
         controlPoints.push(point);
         GoP.add(point);
 
+        pMaterial = new THREE.SpriteMaterial({color: "blue"});
         point = new THREE.Sprite(pMaterial);
         point.position.subVectors(points[i].position, controlPoints[controlPoints.length-1].position);
         point.position.divideScalar(2);
