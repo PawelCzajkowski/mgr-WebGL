@@ -22,6 +22,65 @@ function dwumian(n, k) {
   return trojkatPascala[n][k];
 }
 
+function BezierSurface(controlPoints, n, m, weights) {
+  THREE.Geometry.call(this);
+  this.type = "BezierSurface";
+  this.parameters = {
+    uDegree : n,
+    vDegree : m,
+    controlPoints : controlPoints,
+    weights : weights
+  };
+
+  this.controlPoints = controlPoints;
+  this.weights = weights || 1;
+  var segments = 3;
+  var verts = this.vertices;
+  console.log("Stopien U: "+n+" stopien V: "+m)
+
+  createVertices();
+
+  function createVertices() {
+    for (var v=0; v/(m*segments) <= 1; v++){
+      for (var u=0; u/(n*segments) <= 1; u++) {
+        //tutaj wyznaczenie punktow dla u i v
+        //czyli wywoalnie funkcji P(u,v)
+        verts.push(bezier(u/(n*segments), v/(m*segments), n, m));
+      }
+    }
+    console.log("wyznaczanie punktow zakonczone sukcesem");
+  }
+
+  function createFaces() {
+
+  }
+
+  function bezier(u, v, uDegree, vDegree) {
+    var sumX = 0, sumY = 0, sumZ = 0;
+    for (var i=0; i <= vDegree; i++) {
+      var bernV = bernstein(vDegree, i, v);
+      for (var j=0; j <= uDegree; j++) {
+        //wyznacz Bernsteina
+        var bernU = bernstein(uDegree, j, u);
+        //liczba kolumn to uDegree+1
+        var cp = controlPoints[j+i*(uDegree+1)].position;
+        sumX += cp.x*bernU*bernV;
+        sumY += cp.y*bernU*bernV;
+        sumZ += cp.z*bernU*bernV;
+      }
+    }
+    return new THREE.Vector3(sumX, sumY, sumZ);
+  };
+
+  function bernstein(N, i, u) {
+    var k = 1-u;
+    return dwumian(N, i)*Math.pow(k, N-i)*Math.pow(u, i);
+  }
+};
+
+BezierSurface.prototype = Object.create(THREE.Geometry.prototype);
+BezierSurface.prototype.constructor = BezierSurface;
+
 function BezierCurve(stopien, tablica, waga) {
   this.n = stopien;
   this.geometry = tablica.position.array;
