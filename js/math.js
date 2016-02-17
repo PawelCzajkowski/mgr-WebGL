@@ -36,9 +36,10 @@ function BezierSurface(controlPoints, n, m, weights) {
   this.weights = weights || 1;
   var segments = 3;
   var verts = this.vertices;
-  console.log("Stopien U: "+n+" stopien V: "+m)
+  var faces = this.faces;
 
   createVertices();
+  createFaces();
 
   function createVertices() {
     for (var v=0; v/(m*segments) <= 1; v++){
@@ -48,11 +49,21 @@ function BezierSurface(controlPoints, n, m, weights) {
         verts.push(bezier(u/(n*segments), v/(m*segments), n, m));
       }
     }
-    console.log("wyznaczanie punktow zakonczone sukcesem");
   }
 
   function createFaces() {
+    var N = n*segments+1, M = m*segments+1;
+    for (var i=0; i<M-1; i++) {
+      for (var j=0; j<N-1; j++) {
+        var a = i*N+j;
+        var b = i*N+j+1;
+        var c = (i+1)*N+j+1;
+        var d = (i+1)*N+j;
 
+        faces.push(new THREE.Face3(a,b,d));
+        faces.push(new THREE.Face3(b,c,d));
+      }
+    }
   }
 
   function bezier(u, v, uDegree, vDegree) {
@@ -70,13 +81,13 @@ function BezierSurface(controlPoints, n, m, weights) {
       }
     }
     return new THREE.Vector3(sumX, sumY, sumZ);
-  };
+  }
 
   function bernstein(N, i, u) {
     var k = 1-u;
     return dwumian(N, i)*Math.pow(k, N-i)*Math.pow(u, i);
   }
-};
+}
 
 BezierSurface.prototype = Object.create(THREE.Geometry.prototype);
 BezierSurface.prototype.constructor = BezierSurface;

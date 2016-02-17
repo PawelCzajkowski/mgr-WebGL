@@ -30,8 +30,7 @@
   <script>
     var raycaster, scene, camera, renderer, plane, controls;
     var INTERSECTED, SELECTED, req;
-    var pressed = false;
-    var controlPoints;
+    var controlPoints, cols, rows;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
@@ -43,37 +42,82 @@
       document.getElementById('popup').style.visibility = "visible";
     }
 
+    function recalculate() {
+      var lines = scene.getObjectByName('linie');
+      for (var i=0; i<lines.children.length; i++) {
+        lines.children[i].geometry.verticesNeedUpdate = true;
+      }
+      scene.remove(scene.getObjectByName("bezierSurf"));
+      createBezierSurface();
+    }
+
+    function createBezierSurface(CtrlPts, Udeg, Vdeg) {
+      var surface = new THREE.Group();
+      surface.name = "bezierSurf";
+      scene.add(surface);
+      var bezierSurface = new BezierSurface(controlPoints, cols-1, rows-1);
+      var material = new THREE.MeshBasicMaterial( { color: 0xffccff, side: THREE.DoubleSide } );
+      var mesh = new THREE.Mesh(bezierSurface, material);
+      surface.add(mesh);
+      var mesh2 = new THREE.Mesh(bezierSurface, new THREE.MeshBasicMaterial({color: 0xff00ff, wireframe: true}));
+      surface.add(mesh2);
+    }
+
     function createSurface() {
       resetScene();
       controlPoints = [];
       document.getElementById('popup').style.visibility = 'hidden';
-      var cols = Number(document.getElementById("kolumny").value);
-      var rows = Number(document.getElementById("wiersze").value);
-
+      cols = Number(document.getElementById("kolumny").value);
+      rows = Number(document.getElementById("wiersze").value);
+      var k=0;
       var size = window.innerHeight*0.2;
       var rowStep = 2*size/(cols-1);
       var colStep = 2*size/(rows-1);
-      for (var i = -size; i <=size; i += colStep){
-        for (var j = -size; j <= size; j += rowStep) {
+      var groupPoints = new THREE.Group();
+      groupPoints.name = "punkty";
+      scene.add(groupPoints);
+      for (var i = -size; i <=size+1; i += colStep){
+        for (var j = -size; j <= size+1; j += rowStep) {
           var pMaterial = new THREE.SpriteMaterial({color: "green"});
           var point = new THREE.Sprite(pMaterial);
           point.scale.x = point.scale.y = 10;
           point.position.x = j;
           point.position.y = i;
-          point.position.z = 0; //Math.abs(i/2+j/2);
-          scene.add(point);
-
+          point.position.z = 0;
+          groupPoints.add(point);
           controlPoints.push(point);
         }
       }
-      bezierSurface = new BezierSurface(controlPoints, cols-1, rows-1);
-      var surface = new THREE.Points(bezierSurface,  new THREE.PointsMaterial( { color: 'red', size: 4 } ));
-      scene.add(surface);
-    render();
+
+      createBezierSurface();
+
+      //laczenie puntktow kontrolnych
+      var groupLines = new THREE.Group();
+      groupLines.name = "linie";
+      scene.add(groupLines);
+      for (var i=0; i<rows; i++) {
+        var lineGeometry = new THREE.Geometry();
+        for (var j=0; j<cols; j++) {
+          lineGeometry.vertices.push(controlPoints[j+i*cols].position);
+        }
+        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
+        groupLines.add(line);
+      }
+      for (var i=0; i<cols; i++){
+        var lineGeometry = new THREE.Geometry();
+        for (var j=0; j<rows; j++) {
+          lineGeometry.vertices.push(controlPoints[i+j*cols].position);
+        }
+        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
+        groupLines.add(line);
+      }
+
+      render();
     }
 
     function render() {
       camera.lookAt(scene.position);
+      plane.lookAt(camera.position);
       renderer.render(scene, camera);
     }
 
@@ -99,8 +143,8 @@
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, window.innerWidth );
-      camera.position.z = window.innerWidth/2;
+      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 2*window.innerWidth );
+      camera.position.z = window.innerWidth;
 
       if ( webglAvailable() ) {
         renderer = new THREE.WebGLRenderer({antialias:true});
@@ -113,13 +157,13 @@
       container.appendChild(renderer.domElement);
 
       controls = new THREE.OrthographicTrackballControls( camera, renderer.domElement );
-      controls.enableZoom = false;
+      controls.noZoom = true;
+      controls.noPan = true;
 
       raycaster = new THREE.Raycaster();
 
       plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-          new THREE.MeshBasicMaterial( { visible: false } )
-        );
+                             new THREE.MeshBasicMaterial( { visible: false } ));
       scene.add(plane);
 
       window.addEventListener("resize",onResize,false);
@@ -132,6 +176,7 @@
     function resetScene(){
       try {
         scene.children = [];
+        scene.add(plane);
         controls.reset();
         renderer.clear();
       } catch (err) {
@@ -161,6 +206,8 @@
           var intersects = raycaster.intersectObject(plane);
           if (intersects.length > 0) {
             SELECTED.position.copy(intersects[0].point.sub(offset));
+            recalculate();
+
           }
           return;
         }
@@ -172,7 +219,6 @@
               INTERSECTED = intersects[0].object;
               temp = INTERSECTED.material.color.getHex();
               INTERSECTED.material.color.set("red");
-              plane.position.copy( INTERSECTED.position );
             }
           document.body.style.cursor = 'pointer';
         } else {
@@ -203,7 +249,7 @@
         SELECTED = intersects[0].object;
         var intersect = raycaster.intersectObject(plane);
         if (intersect.length > 0) {
-          offset.copy(intersect[0].point).sub(plane.position);
+          offset.copy(intersect[0].point).sub(INTERSECTED.position);
         }
         document.body.style.cursor = 'move';
       }
@@ -213,7 +259,6 @@
     function onMouseUp(event){
       event.preventDefault();
       if (INTERSECTED) {
-        plane.position.copy(INTERSECTED.position);
         SELECTED = null;
       }
       document.body.style.cursor = 'auto';
