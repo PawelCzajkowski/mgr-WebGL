@@ -74,7 +74,7 @@ input.suwak {
   padding: 20px;
   font-size: 18px;
 }
-#popup {
+#popup, #waga {
   display: block;
   position: fixed;
   visibility: hidden;

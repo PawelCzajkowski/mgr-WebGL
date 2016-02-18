@@ -33,7 +33,7 @@ function BezierSurface(controlPoints, n, m, weights) {
   };
 
   this.controlPoints = controlPoints;
-  this.weights = weights || 1;
+  this.weights = weights;
   var segments = 3;
   var verts = this.vertices;
   var faces = this.faces;
@@ -67,20 +67,38 @@ function BezierSurface(controlPoints, n, m, weights) {
   }
 
   function bezier(u, v, uDegree, vDegree) {
-    var sumX = 0, sumY = 0, sumZ = 0;
-    for (var i=0; i <= vDegree; i++) {
-      var bernV = bernstein(vDegree, i, v);
-      for (var j=0; j <= uDegree; j++) {
-        //wyznacz Bernsteina
-        var bernU = bernstein(uDegree, j, u);
-        //liczba kolumn to uDegree+1
-        var cp = controlPoints[j+i*(uDegree+1)].position;
-        sumX += cp.x*bernU*bernV;
-        sumY += cp.y*bernU*bernV;
-        sumZ += cp.z*bernU*bernV;
+    var sumX = 0, sumY = 0, sumZ = 0, sumW=0;
+    if (weights === undefined) {
+      for (var i=0; i <= vDegree; i++) {
+        var bernV = bernstein(vDegree, i, v);
+        for (var j=0; j <= uDegree; j++) {
+          //wyznacz Bernsteina
+          var bernU = bernstein(uDegree, j, u);
+          //liczba kolumn to uDegree+1
+          var cp = controlPoints[j+i*(uDegree+1)].position;
+          sumX += cp.x*bernU*bernV;
+          sumY += cp.y*bernU*bernV;
+          sumZ += cp.z*bernU*bernV;
+        }
       }
+      return new THREE.Vector3(sumX, sumY, sumZ);
+    } else {
+      for (var i=0; i <= vDegree; i++) {
+        var bernV = bernstein(vDegree, i, v);
+        for (var j=0; j <= uDegree; j++) {
+          //wyznacz Bernsteina
+          var bernU = bernstein(uDegree, j, u);
+          //liczba kolumn to uDegree+1
+          var cp = controlPoints[j+i*(uDegree+1)].position;
+          var w = weights[j+i*(uDegree+1)];
+          sumX += cp.x*bernU*bernV*w;
+          sumY += cp.y*bernU*bernV*w;
+          sumZ += cp.z*bernU*bernV*w;
+          sumW += bernU*bernV*w;
+        }
+      }
+      return new THREE.Vector3(sumX/sumW, sumY/sumW, sumZ/sumW);
     }
-    return new THREE.Vector3(sumX, sumY, sumZ);
   }
 
   function bernstein(N, i, u) {
