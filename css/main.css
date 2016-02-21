@@ -63,6 +63,9 @@ div.suwak {
 input.suwak {
   margin-right: 20px;
 }
+input.knot {
+  margin: 0;
+}
 #form {
   display: block;
   position: absolute;
@@ -74,7 +77,7 @@ input.suwak {
   padding: 20px;
   font-size: 18px;
 }
-#popup, #waga {
+#popup, #waga, #wezly {
   display: block;
   position: fixed;
   visibility: hidden;
