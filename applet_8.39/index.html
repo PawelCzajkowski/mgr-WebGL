@@ -85,6 +85,18 @@
       drawNURBS();
     }
 
+    function drawLines() {
+      var controlPoints = new THREE.Geometry();
+      for (var x in nurbsPunktyKontrolne) {
+        var point = nurbsPunktyKontrolne[x];
+        controlPoints.vertices.push(new THREE.Vector3(point.x, point.y, point.z));
+      }
+      var lineMaterial = new THREE.LineBasicMaterial({color: "black"});
+      var controlLines = new THREE.Line(controlPoints, lineMaterial);
+      controlLines.name = "lines";
+      scene.add(controlLines);
+    }
+
     function drawNURBS(){
       try {
         scene.remove(scene.getObjectByName("NURBS"));
@@ -128,13 +140,8 @@
           punkty.add(point);
         }
       }
-
-      var controlPoints = new THREE.Geometry();
-      controlPoints.vertices = nurbsCurve.controlPoints;
-      var lineMaterial = new THREE.LineBasicMaterial({color: "black"});
-      var controlLines = new THREE.Line(controlPoints, lineMaterial);
-      controlLines.name = "lines";
-      scene.add(controlLines);
+      //rysuj linie
+      drawLines();
       render();
     }
 
