@@ -157,10 +157,8 @@
 
     function recalculate() {
       console.log('przelicz')
-      var lines = scene.getObjectByName('linie');
-      for (var i=0; i<lines.children.length; i++) {
-        lines.children[i].geometry.verticesNeedUpdate = true;
-      }
+      scene.remove(scene.getObjectByName('linie'));
+      drawLines();
       scene.remove(scene.getObjectByName("nurbsSurf"));
       createNURBSSurface();
       render();
@@ -195,11 +193,35 @@
       var getSurfacePoint = function(u,v) {
         return nurbsSurface.getPoint(u,v);
       }
-      var nurbsGeometry = new THREE.ParametricGeometry(getSurfacePoint, 10*uDeg, 10*vDeg);
+      var nurbsGeometry = new THREE.ParametricGeometry(getSurfacePoint, 6*uDeg, 6*vDeg);
       var mesh = new THREE.Mesh(nurbsGeometry, material);
       surface.add(mesh);
       var mesh2 = new THREE.Mesh(nurbsGeometry, new THREE.MeshBasicMaterial({color: 0xff00ff, wireframe: true}));
       surface.add(mesh2);
+    }
+
+    function drawLines() {
+      var groupLines = new THREE.Group();
+      groupLines.name = "linie";
+      scene.add(groupLines);
+      for (var i=0; i<rows; i++) {
+        var lineGeometry = new THREE.Geometry();
+        for (var j=0; j<cols; j++) {
+          var point = new THREE.Vector3(controlPoints[i][j].x, controlPoints[i][j].y, controlPoints[i][j].z);
+          lineGeometry.vertices.push(point);
+        }
+        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
+        groupLines.add(line);
+      }
+      for (var i=0; i<cols; i++){
+        var lineGeometry = new THREE.Geometry();
+        for (var j=0; j<rows; j++) {
+          var point = new THREE.Vector3(controlPoints[j][i].x, controlPoints[j][i].y, controlPoints[j][i].z);
+          lineGeometry.vertices.push(point);
+        }
+        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
+        groupLines.add(line);
+      }
     }
 
     function createSurface() {
@@ -226,9 +248,9 @@
           point.position.x = j;
           point.position.y = i;
           point.position.z = 0;
+          groupPoints.add(point);
           point.position.w = 5;
           sprites.push(point);
-          groupPoints.add(point);
           controlPoints[n].push(point.position);
         }
       }
@@ -236,26 +258,7 @@
       recalculateKnots();
       createNURBSSurface(uDeg, vDeg);
       //laczenie puntktow kontrolnych
-      var groupLines = new THREE.Group();
-      groupLines.name = "linie";
-      scene.add(groupLines);
-      for (var i=0; i<rows; i++) {
-        var lineGeometry = new THREE.Geometry();
-        for (var j=0; j<cols; j++) {
-          lineGeometry.vertices.push(controlPoints[i][j]);
-        }
-        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
-        groupLines.add(line);
-      }
-      for (var i=0; i<cols; i++){
-        var lineGeometry = new THREE.Geometry();
-        for (var j=0; j<rows; j++) {
-          lineGeometry.vertices.push(controlPoints[j][i]);
-        }
-        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
-        groupLines.add(line);
-      }
-
+      drawLines();
       render();
     }
 
