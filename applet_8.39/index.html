@@ -10,8 +10,16 @@
   <ul id="navi">
     <li style="padding: 7px">Stopień krzywej: <input type="number" id="stopien" onchange="changeDegree(this.value)" value="3" size="2" min="1"></li>
     <li style="margin: 10"><input type="checkbox" id="edit" >Edytuj krzywą</li>
+    <li><a class="nowy" href="#" onclick="show_wezly()">Edytuj węzły</a></li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
+  <div id="wezly">
+    <div id="form">
+      Ciąg węzłów:
+      <br><span id="uKnots"></span>
+      <br><button type="button" onclick="setKnots()">OK</button>
+    </div>
+  </div>
   <script src="../js/three.min.js"></script>
   <script src="../js/math.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
@@ -24,7 +32,7 @@
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
     var points = [];
-    var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
+    var nurbsWezly = [], nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
     var isClosed = false;
 
@@ -36,6 +44,45 @@
 
     init();
     render();
+
+    function show_wezly() {
+      document.getElementById('wezly').style.visibility = "visible";
+      var span = document.getElementById("uKnots");
+      if (span.children.length === 0) {
+        for (var x in nurbsWezly) {
+          var item = document.createElement("INPUT");
+          item.setAttribute("type", "number");
+          item.setAttribute("id", "K"+x);
+          item.setAttribute("value", nurbsWezly[x]);
+          item.setAttribute("min", 0);
+          item.setAttribute("max", 1);
+          item.setAttribute("step", 0.01);
+          item.setAttribute("class", "knot");
+          item.setAttribute("onchange", "changeKnot(id)");
+          span.appendChild(item);
+        }
+      }
+    }
+
+    function changeKnot(id) {
+      var val = document.getElementById(id).value;
+      nurbsWezly[id.slice(1)] = Number(val);
+    }
+
+    function setKnots() {
+      var pass = true;
+      for (var i=0; i<nurbsWezly.length-1; i++) {
+        if (nurbsWezly[i+1] < nurbsWezly[i]) {
+          alert("Ciąg węzłów musi być niemalejący!");
+          pass = false;
+          break;
+        }
+      }
+      if (pass) {
+        document.getElementById('wezly').style.visibility = "hidden";
+        drawNURBS();
+      }
+    }
 
     function changeWeight(id) {
       var item = document.getElementById(id);
@@ -76,12 +123,21 @@
       item2.setAttribute("max", 10);
       item2.setAttribute("step", 0.1);
       item2.setAttribute("size", 3);
-//      item2.setAttribute("width", "center");
       item.appendChild(item2);
-      list.insertBefore(item, list.childNodes[list.childNodes.length-4]);
+      list.insertBefore(item, list.childNodes[list.childNodes.length-6]);
       idx++;
 
       nurbsPunktyKontrolne.push(new THREE.Vector4(Px, Py, 0, 5));
+
+      nurbsWezly = [];
+      var N = nurbsPunktyKontrolne.length;
+      for (var i=0; i <= stopien; i++) {
+        nurbsWezly.push(0);
+      }
+      for (var i = 0; i < N; i++) {
+        var wezel = (i+1)/(N-stopien);
+        nurbsWezly.push(THREE.Math.clamp(wezel, 0, 1));
+      }
       drawNURBS();
     }
 
@@ -107,16 +163,7 @@
         console.error(e.message);
       }
 
-      var nurbsWezly = [];
-      var N = nurbsPunktyKontrolne.length
-      for (var i=0; i <= stopien; i++) {
-        nurbsWezly.push(0);
-      }
-      for (var i = 0; i < N; i++) {
-        var wezel = (i+1)/(N-stopien);
-        nurbsWezly.push(THREE.Math.clamp(wezel, 0, 1));
-      }
-
+      var N = nurbsPunktyKontrolne.length;
       var nurbsCurve = new THREE.NURBSCurve(stopien, nurbsWezly, nurbsPunktyKontrolne);
       if (stopien<N) {
         var nurbsGeometry = new THREE.Geometry();
