@@ -1,5 +1,6 @@
 //plik zawierający przydatne funkcje matematyczne
 /*jshint globalstrict: true*/
+/*global window, THREE */
 "use strict";
 
 var trojkatPascala = [
@@ -20,6 +21,50 @@ function dwumian(n, k) {
     trojkatPascala.push(wiersz);
   }
   return trojkatPascala[n][k];
+}
+
+// Wyznaczenie krzywizny na podstawie algorytmu de Casteljau
+function wyznaczKrzywizne(curve, ctrlPoint, count, deg) {
+  var rGeometry = new THREE.Geometry();
+  for (var i = 0; i <= count; i++) {
+    var u = i/count;
+    var Vx = [], Vy = [];
+    if (deg === 2) {
+      for (var j = 0; j < ctrlPoint.length; j++) {
+        Vx[j] = ctrlPoint[j].x; Vy[j] = ctrlPoint[j].y;
+      }
+    } else {
+      for (var j = 0; j < deg; j++) {
+        Vx[j] = ctrlPoint[j].x + (ctrlPoint[j+1].x - ctrlPoint[j].x)*u;
+        Vy[j] = ctrlPoint[j].y + (ctrlPoint[j+1].y - ctrlPoint[j].y)*u;
+      }
+    }
+
+    var vecA = new THREE.Vector3(Vx[1]-Vx[0], Vy[1]-Vy[0]);
+    var vecB = new THREE.Vector3(Vx[2]-Vx[1], Vy[2]-Vy[1]);
+
+    Vx.push(Vx[0]+vecA.x*u);
+    Vx.push(Vx[1]+vecB.x*u);
+    Vy.push(Vy[0]+vecA.y*u);
+    Vy.push(Vy[1]+vecB.y*u);
+
+    var vecC = new THREE.Vector3(Vx[Vx.length-1]-Vx[Vx.length-2], Vy[Vy.length-1]-Vy[Vy.length-2]);
+    var vecD = new THREE.Vector3().subVectors(vecB, vecA);
+
+    var p1 = new THREE.Vector3(deg*vecC.x, deg*vecC.y);
+    var p2 = new THREE.Vector3(deg*(deg-1)*vecD.x, deg*(deg-1)*vecD.y);
+
+    var curv = (p1.x*p2.y-p1.y*p2.x)/Math.sqrt(Math.pow(p1.length(), 3));
+    console.log("u: "+u+" k: "+curv);
+
+    var temp = curve.getPoint(u);
+    rGeometry.vertices.push(new THREE.Vector3(temp.x, temp.y));
+    var temp2 = new THREE.Vector3();
+    temp2.x = temp.x+p1.y*curv/p1.length();
+    temp2.y = temp.y-p1.x*curv/p1.length();
+    rGeometry.vertices.push(temp2);
+  }
+  return rGeometry;
 }
 
 function copyPoints(points) {
@@ -157,11 +202,11 @@ function BezierSurface(controlPoints, n, m, weights) {
       return new THREE.Vector3(sumX/sumW, sumY/sumW, sumZ/sumW);
     }
   }
+}
 
-  function bernstein(N, i, u) {
-    var k = 1-u;
-    return dwumian(N, i)*Math.pow(k, N-i)*Math.pow(u, i);
-  }
+function bernstein(N, i, u) {
+  var k = 1-u;
+  return dwumian(N, i)*Math.pow(k, N-i)*Math.pow(u, i);
 }
 
 BezierSurface.prototype = Object.create(THREE.Geometry.prototype);

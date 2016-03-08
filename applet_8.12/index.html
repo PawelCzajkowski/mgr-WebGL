@@ -11,6 +11,7 @@
     <li><input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
     <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
     <li><input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
+    <li><input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -19,6 +20,7 @@
   <script src="../js/Projector.js"></script>
   <script>
     var raycaster, scene, camera, renderer, plane;
+    var curve, Cgeometry;
     var INTERSECTED, SELECTED;
     var points = [];
     var geometry = new THREE.Geometry();
@@ -39,25 +41,50 @@
       render();
     }
 
+    function show() {
+      document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
+      if(document.getElementsByName("krzywizna").checked) {
+          drawCurvature(curve, Cgeometry);
+        } else if (scene.getObjectByName("krzywizna") !== undefined ){
+          scene.remove(scene.getObjectByName("krzywizna"));
+        }
+      render();
+    }
+
     init();
     render();
 
-    function drawBezier(geometry){
+    function drawBezier(){
       if (geometry.vertices.length == 3) {
-        var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
+        curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
         var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
+        Cgeometry = path.createPointsGeometry( 30 );
         var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
+        if(document.getElementsByName("krzywizna").checked) {
+          drawCurvature(curve, Cgeometry);
+        }
         quadraticBezier.name = 'bezier';
         scene.add(quadraticBezier);
       } else if (geometry.vertices.length == 4) {
-        var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
+        curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
         var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
+        Cgeometry = path.createPointsGeometry( 30 );
         var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
+        if(document.getElementsByName("krzywizna").checked) {
+          drawCurvature(curve, Cgeometry);
+        }
         cubicBezier.name = 'bezier';
         scene.add(cubicBezier);
       }
+    }
+
+    function drawCurvature(Curve, Geometry) {
+      var cGeometry = new THREE.Geometry();
+      cGeometry = wyznaczKrzywizne(Curve, geometry.vertices, 50, GUI.stopien);
+      var cMaterial = new THREE.LineBasicMaterial({color: "blue"});
+      var cLines = new THREE.LineSegments(cGeometry, cMaterial);
+      cLines.name = "krzywizna";
+      scene.add(cLines);
     }
 
     function addPoint(Px, Py) {
@@ -73,12 +100,12 @@
       if(GUI.stopien == 2 && geometry.vertices.length == 3) {
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
         scene.add(lines);
-        drawBezier(geometry);
+        drawBezier();
       } else if(GUI.stopien == 3 && geometry.vertices.length == 4)
       {
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
         scene.add(lines);
-        drawBezier(geometry);
+        drawBezier();
       }
     }
 
@@ -130,11 +157,11 @@
 
       geometry = new THREE.Geometry();
 
-      window.addEventListener("resize",onResize,false);
-      renderer.domElement.addEventListener("mousemove",onMove,false);
-      renderer.domElement.addEventListener("click",onClick,false);
-      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
-      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+      window.addEventListener("resize", onResize, false);
+      renderer.domElement.addEventListener("mousemove", onMove, false);
+      renderer.domElement.addEventListener("click", onClick, false);
+      renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+      renderer.domElement.addEventListener("mouseup", onMouseUp, false);
     }
 
     function resetScene(){
@@ -142,6 +169,7 @@
       //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
       try {
         scene.remove(scene.getObjectByName("otoczka"));
+        scene.remove(scene.getObjectByName("krzywizna"));
         points = [];
         delete geometry.vertices;
         geometry = new THREE.Geometry();
@@ -176,9 +204,10 @@
           geometry.verticesNeedUpdate = true;
 
           scene.remove(scene.getObjectByName('bezier'));
+          scene.remove(scene.getObjectByName('krzywizna'));
           if (document.getElementsByName("otoczka").checked)
             rysujOtoczke(copyPoints(points));
-          drawBezier(geometry);
+          drawBezier();
         }
         return;
       }
@@ -198,6 +227,7 @@
         INTERSECTED = null;
         document.body.style.cursor = 'auto';
         }
+      render();
     }
 
     function onClick(event){
