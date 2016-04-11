@@ -35,7 +35,6 @@
     }
 
     function change() {
-      console.log("zmiana");
       document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
       render();
     }
@@ -86,6 +85,8 @@
     function render() {
       if(document.getElementsByName("otoczka").checked) {
         rysujOtoczke(points);
+      } else if (scene.getObjectByName("otoczka") !== undefined ){
+        scene.remove(scene.getObjectByName("otoczka"));
       }
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
@@ -175,7 +176,8 @@
           geometry.verticesNeedUpdate = true;
 
           scene.remove(scene.getObjectByName('bezier'));
-          rysujOtoczke(points);
+          if (document.getElementsByName("otoczka").checked)
+            rysujOtoczke(points);
           drawBezier(geometry);
         }
         return;
