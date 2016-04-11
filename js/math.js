@@ -22,6 +22,55 @@ function dwumian(n, k) {
   return trojkatPascala[n][k];
 }
 
+//wyznacznie otoczki
+function iloczyn(o, a, b) {
+  return (a.position.x - o.position.x) * (b.position.y - o.position.y) - (a.position.y - o.position.y) * (b.position.x - o.position.x);
+}
+
+//algorytm Andrew's monotone chain
+function wyznaczOtoczke(punkty) {
+  punkty.sort(function(a,b) {
+    return a.position.x == b.position.x ? a.position.y - b.position.y : a.position.x - b.position.x;
+  });
+
+  var gora = [];
+  for (var i = 0; i < punkty.length; i++) {
+    while (gora.length >= 2 && iloczyn(gora[gora.length - 2], gora[gora.length - 1], punkty[i]) >= 0) {
+      gora.pop();
+    }
+    gora.push(punkty[i]);
+  }
+
+  var dol = [];
+  for (var i = punkty.length - 1; i >= 0; i--) {
+    while (dol.length >= 2 && iloczyn(dol[dol.length - 2], dol[dol.length - 1], punkty[i]) >= 0) {
+      dol.pop();
+    }
+    dol.push(punkty[i]);
+  }
+
+  gora.pop();
+  dol.pop();
+  return gora.concat(dol);
+}
+
+function rysujOtoczke(points) {
+  try { scene.remove(scene.getObjectByName('otoczka')); }
+  catch (e) { console.log(e.message); }
+    var otoczka = wyznaczOtoczke(points);
+    var oGeometry = new THREE.Geometry();
+    for (var i = 0; i < otoczka.length; i++) {
+      otoczka[i].position.z = -10;
+      oGeometry.vertices.push(otoczka[i].position);
+      if(i < otoczka.length - 2)
+        oGeometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
+    }
+    var oMaterial = new THREE.MeshBasicMaterial({color: "#12c3b5", side: THREE.DoubleSide, transparent: true, opacity: 0.2});
+    var oMesh = new THREE.Mesh(oGeometry, oMaterial);
+    oMesh.name = "otoczka";
+    scene.add(oMesh);
+}
+
 function BezierSurface(controlPoints, n, m, weights) {
   THREE.Geometry.call(this);
   this.type = "BezierSurface";
