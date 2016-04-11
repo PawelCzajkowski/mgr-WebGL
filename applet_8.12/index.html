@@ -10,9 +10,11 @@
     <li style="margin: 5 10 0 10">Stopień krzywej</li>
     <li><input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
     <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
+    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
+  <script src="../js/math.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
   <script src="../js/Projector.js"></script>
   <script>
@@ -30,6 +32,12 @@
     function setDeg(val) {
       GUI.stopien = val;
       resetScene();
+    }
+
+    function change() {
+      console.log("zmiana");
+      document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
+      render();
     }
 
     init();
@@ -76,6 +84,9 @@
     }
 
     function render() {
+      if(document.getElementsByName("otoczka").checked) {
+        rysujOtoczke(points);
+      }
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
     }
@@ -126,9 +137,11 @@
     }
 
     function resetScene(){
+      //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
+      //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
       try {
-        //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
-        //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
+        scene.remove(scene.getObjectByName("otoczka"));
+        points = [];
         delete geometry.vertices;
         geometry = new THREE.Geometry();
         scene.children = [];
@@ -146,6 +159,7 @@
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
+      render();
     }
 
     function onMove(event){
@@ -161,7 +175,8 @@
           geometry.verticesNeedUpdate = true;
 
           scene.remove(scene.getObjectByName('bezier'));
-            drawBezier(geometry);
+          rysujOtoczke(points);
+          drawBezier(geometry);
         }
         return;
       }
@@ -181,7 +196,6 @@
         INTERSECTED = null;
         document.body.style.cursor = 'auto';
         }
-      render();
     }
 
     function onClick(event){
