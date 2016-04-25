@@ -9,6 +9,7 @@
 
   <ul id="navi">
     <li style="margin: 10"><input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li><input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -30,6 +31,11 @@
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
+
+    function change() {
+      document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
+      render();
+    }
 
     init();
     render();
@@ -78,6 +84,11 @@
     }
 
     function render() {
+      if(document.getElementsByName("otoczka").checked) {
+        rysujOtoczke(copyPoints(points));
+      } else if (scene.getObjectByName("otoczka") !== undefined ){
+        scene.remove(scene.getObjectByName("otoczka"));
+      }
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
     }
@@ -173,6 +184,9 @@
             }
             scene.remove(scene.getObjectByName('Bezier'));
             drawBezier(drawCount-1, geometry.attributes);
+            if (document.getElementsByName("otoczka").checked) {
+              rysujOtoczke(copyPoints(points));
+            }
           }
           return;
         }

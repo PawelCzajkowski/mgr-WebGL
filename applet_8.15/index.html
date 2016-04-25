@@ -13,6 +13,7 @@
   <ul id="navi">
     <li style="margin: 10px">Stopień krzywej: <span id="stopien_krzywej">0</span></li>
     <li><input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li><input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -25,7 +26,7 @@
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
     var points = [];
-    var geometry, positions, lines;
+    var geometry, positions, lines, kopia;
     var isWebGL;
     var bezier, bernstein, Bernstein;
     var Pgeometry = new THREE.Geometry();
@@ -36,6 +37,11 @@
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
+
+    function change() {
+      document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
+      render();
+    }
 
     //wykres funkcji Bernsteina
     var dim = window.innerHeight*0.4;
@@ -140,6 +146,11 @@
     }
 
     function render() {
+      if(document.getElementsByName("otoczka").checked) {
+        rysujOtoczke(copyPoints(points));
+      } else if (scene.getObjectByName("otoczka") !== undefined ){
+        scene.remove(scene.getObjectByName("otoczka"));
+      }
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
     }
@@ -252,6 +263,9 @@
             scene.remove(scene.getObjectByName('punkt'));
             drawPoints();
             drawBezier(drawCount-1, geometry.attributes);
+            if (document.getElementsByName("otoczka").checked) {
+              rysujOtoczke(copyPoints(points));
+            }
           }
           return;
         }

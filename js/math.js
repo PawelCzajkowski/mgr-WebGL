@@ -22,15 +22,23 @@ function dwumian(n, k) {
   return trojkatPascala[n][k];
 }
 
+function copyPoints(points) {
+  var result = [];
+  for (var i = 0; i < points.length; i++) {
+    result.push(new THREE.Vector3(points[i].position.x, points[i].position.y, points[i].position.z));
+  }
+  return result;
+}
+
 //wyznacznie otoczki
 function iloczyn(o, a, b) {
-  return (a.position.x - o.position.x) * (b.position.y - o.position.y) - (a.position.y - o.position.y) * (b.position.x - o.position.x);
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 //algorytm Andrew's monotone chain
 function wyznaczOtoczke(punkty) {
   punkty.sort(function(a,b) {
-    return a.position.x == b.position.x ? a.position.y - b.position.y : a.position.x - b.position.x;
+    return a.x == b.x ? a.y - b.y : a.x - b.x;
   });
 
   var gora = [];
@@ -60,8 +68,8 @@ function rysujOtoczke(points) {
     var otoczka = wyznaczOtoczke(points);
     var oGeometry = new THREE.Geometry();
     for (var i = 0; i < otoczka.length; i++) {
-      otoczka[i].position.z = -10;
-      oGeometry.vertices.push(otoczka[i].position);
+      otoczka[i].z = -10;
+      oGeometry.vertices.push(otoczka[i]);
       if(i < otoczka.length - 2)
         oGeometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
     }

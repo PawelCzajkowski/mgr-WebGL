@@ -84,7 +84,7 @@
 
     function render() {
       if(document.getElementsByName("otoczka").checked) {
-        rysujOtoczke(points);
+        rysujOtoczke(copyPoints(points));
       } else if (scene.getObjectByName("otoczka") !== undefined ){
         scene.remove(scene.getObjectByName("otoczka"));
       }
@@ -177,7 +177,7 @@
 
           scene.remove(scene.getObjectByName('bezier'));
           if (document.getElementsByName("otoczka").checked)
-            rysujOtoczke(points);
+            rysujOtoczke(copyPoints(points));
           drawBezier(geometry);
         }
         return;
