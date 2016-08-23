@@ -1,23 +1,29 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Applet 9.17</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
-  </head>
+</head>
+
 <body>
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
-    <li style="padding: 8px"><input type="checkbox" id="edit">Edytuj powierzchnię</li>
+    <li style="padding: 8px">
+      <input type="checkbox" id="edit">Edytuj powierzchnię</li>
+    <li style="maring-top: 0px">
+      <input type="checkbox" id="grid" onclick="hideGrid()">Ukryj siatkę</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
   <div id="popup" oncontextmenu="return false;">
     <div id="form">
       <form>
         Liczba wierszy:
-        <input id="wiersze" type="number" min="2" value="2"><br>
-        Liczba kolumn:
-        <input id="kolumny" type="number" min="2" value="2"><br>
+        <input id="wiersze" type="number" min="2" value="2">
+        <br> Liczba kolumn:
+        <input id="kolumny" type="number" min="2" value="2">
+        <br>
         <button type="button" onclick="createSurface()">Twórz</button>
       </form>
     </div>
@@ -41,6 +47,7 @@
     var raycaster, scene, camera, renderer, plane, controls;
     var INTERSECTED, SELECTED, req;
     var controlPoints, cols, rows, weights, id;
+    var groupLines, groupPoints;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
@@ -52,11 +59,17 @@
       document.getElementById('popup').style.visibility = "visible";
     }
 
+    function hideGrid() {
+      document.getElementById("grid").checked =
+        (document.getElementById("grid").checked ? true : false);
+      render();
+    }
+
     function show_waga() {
       document.getElementById("waga").style.visibility = "visible";
     }
 
-    function setWeight(){
+    function setWeight() {
       document.getElementById("waga").style.visibility = "hidden";
       weights[id] = Number(document.getElementById("weight").value);
       scene.remove(scene.getObjectByName("bezierSurf"));
@@ -65,7 +78,7 @@
 
     function recalculate() {
       var lines = scene.getObjectByName('linie');
-      for (var i=0; i<lines.children.length; i++) {
+      for (var i = 0; i < lines.children.length; i++) {
         lines.children[i].geometry.verticesNeedUpdate = true;
       }
       scene.remove(scene.getObjectByName("bezierSurf"));
@@ -76,11 +89,17 @@
       var surface = new THREE.Group();
       surface.name = "bezierSurf";
       scene.add(surface);
-      var bezierSurface = new BezierSurface(controlPoints, cols-1, rows-1, weights);
-      var material = new THREE.MeshBasicMaterial( { color: 0xffccff, side: THREE.DoubleSide } );
+      var bezierSurface = new BezierSurface(controlPoints, cols - 1, rows - 1, weights);
+      var material = new THREE.MeshBasicMaterial({
+        color: 0xffccff,
+        side: THREE.DoubleSide
+      });
       var mesh = new THREE.Mesh(bezierSurface, material);
       surface.add(mesh);
-      var mesh2 = new THREE.Mesh(bezierSurface, new THREE.MeshBasicMaterial({color: 0xff00ff, wireframe: true}));
+      var mesh2 = new THREE.Mesh(bezierSurface, new THREE.MeshBasicMaterial({
+        color: 0xff00ff,
+        wireframe: true
+      }));
       surface.add(mesh2);
     }
 
@@ -91,16 +110,18 @@
       document.getElementById('popup').style.visibility = 'hidden';
       cols = Number(document.getElementById("kolumny").value);
       rows = Number(document.getElementById("wiersze").value);
-      var k=0;
-      var size = window.innerHeight*0.2;
-      var rowStep = 2*size/(cols-1);
-      var colStep = 2*size/(rows-1);
-      var groupPoints = new THREE.Group();
+      var k = 0;
+      var size = window.innerHeight * 0.2;
+      var rowStep = 2 * size / (cols - 1);
+      var colStep = 2 * size / (rows - 1);
+      groupPoints = new THREE.Group();
       groupPoints.name = "punkty";
       scene.add(groupPoints);
-      for (var i = -size; i <=size+1; i += colStep){
-        for (var j = -size; j <= size+1; j += rowStep) {
-          var pMaterial = new THREE.SpriteMaterial({color: "green"});
+      for (var i = -size; i <= size + 1; i += colStep) {
+        for (var j = -size; j <= size + 1; j += rowStep) {
+          var pMaterial = new THREE.SpriteMaterial({
+            color: "green"
+          });
           var point = new THREE.Sprite(pMaterial);
           point.scale.x = point.scale.y = 10;
           point.position.x = j;
@@ -115,23 +136,29 @@
       createBezierSurface();
 
       //laczenie puntktow kontrolnych
-      var groupLines = new THREE.Group();
+      groupLines = new THREE.Group();
       groupLines.name = "linie";
       scene.add(groupLines);
-      for (var i=0; i<rows; i++) {
+      for (var i = 0; i < rows; i++) {
         var lineGeometry = new THREE.Geometry();
-        for (var j=0; j<cols; j++) {
-          lineGeometry.vertices.push(controlPoints[j+i*cols].position);
+        for (var j = 0; j < cols; j++) {
+          lineGeometry.vertices.push(controlPoints[j + i * cols].position);
         }
-        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
+        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
+          color: "black",
+          linewidth: 2
+        }));
         groupLines.add(line);
       }
-      for (var i=0; i<cols; i++){
+      for (var i = 0; i < cols; i++) {
         var lineGeometry = new THREE.Geometry();
-        for (var j=0; j<rows; j++) {
-          lineGeometry.vertices.push(controlPoints[i+j*cols].position);
+        for (var j = 0; j < rows; j++) {
+          lineGeometry.vertices.push(controlPoints[i + j * cols].position);
         }
-        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: "black", linewidth: 2}));
+        var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
+          color: "black",
+          linewidth: 2
+        }));
         groupLines.add(line);
       }
 
@@ -141,88 +168,98 @@
     function render() {
       camera.lookAt(scene.position);
       plane.lookAt(camera.position);
+      if (document.getElementById("grid").checked) {
+        scene.remove(scene.getObjectByName("linie"));
+        scene.remove(scene.getObjectByName("punkty"));
+      } else {
+        scene.add(groupLines);
+        scene.add(groupPoints);
+      }
       renderer.render(scene, camera);
     }
 
     function animate() {
-      req = requestAnimationFrame( animate );
+      req = requestAnimationFrame(animate);
       controls.update();
       render();
     }
 
     function webglAvailable() {
       try {
-        var canvas = document.createElement( 'canvas' );
-        return !!( window.WebGLRenderingContext && (
-          canvas.getContext( 'webgl' ) ||
-          canvas.getContext( 'experimental-webgl' ) )
-                 );
-      } catch ( e ) {
+        var canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (
+          canvas.getContext('webgl') ||
+          canvas.getContext('experimental-webgl')));
+      } catch (e) {
         return false;
       }
     }
 
-    function init(){
+    function init() {
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 2*window.innerWidth );
+      camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 2 * window.innerWidth);
       camera.position.z = window.innerWidth;
 
-      if ( webglAvailable() ) {
-        renderer = new THREE.WebGLRenderer({antialias:true});
+      if (webglAvailable()) {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true
+        });
       } else {
         renderer = new THREE.CanvasRenderer();
       }
       renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth,window.innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
-      controls = new THREE.OrthographicTrackballControls( camera, renderer.domElement );
+      controls = new THREE.OrthographicTrackballControls(camera, renderer.domElement);
       controls.noZoom = true;
       controls.noPan = true;
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-                             new THREE.MeshBasicMaterial( {visible: false } ));
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        }));
       scene.add(plane);
 
-      window.addEventListener("resize",onResize,false);
-      renderer.domElement.addEventListener("mousemove",onMove,false);
-      renderer.domElement.addEventListener("click",onClick,false);
-      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
-      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+      window.addEventListener("resize", onResize, false);
+      renderer.domElement.addEventListener("mousemove", onMove, false);
+      renderer.domElement.addEventListener("click", onClick, false);
+      renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+      renderer.domElement.addEventListener("mouseup", onMouseUp, false);
     }
 
-    function resetScene(){
+    function resetScene() {
       try {
         scene.children = [];
         scene.add(plane);
         controls.reset();
         renderer.clear();
       } catch (err) {
-        console.log("Error: "+err.message);
+        console.log("Error: " + err.message);
       }
     }
 
-    function onResize(){
-      camera.left = window.innerWidth/-2;
-      camera.right = window.innerWidth/2;
-      camera.top = window.innerHeight/2;
-      camera.down = window.innerWidth/-2;
+    function onResize() {
+      camera.left = window.innerWidth / -2;
+      camera.right = window.innerWidth / 2;
+      camera.top = window.innerHeight / 2;
+      camera.down = window.innerWidth / -2;
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function onMove(event){
+    function onMove(event) {
       if (document.getElementById("edit").checked) {
         controls.enabled = false;
         event.preventDefault();
-        mouse.x = (event.clientX/window.innerWidth)*2-1;
-        mouse.y = -(event.clientY/window.innerHeight)*2+1;
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         if (SELECTED) {
           requestAnimationFrame(render);
@@ -235,37 +272,37 @@
         }
 
         var intersects = raycaster.intersectObjects(controlPoints);
-        if(intersects.length > 0){
-            //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
-            if (INTERSECTED != intersects[0].object) {
-              INTERSECTED = intersects[0].object;
-              temp = INTERSECTED.material.color.getHex();
-              INTERSECTED.material.color.set("red");
-            }
+        if (intersects.length > 0) {
+          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+          if (INTERSECTED != intersects[0].object) {
+            INTERSECTED = intersects[0].object;
+            temp = INTERSECTED.material.color.getHex();
+            INTERSECTED.material.color.set("red");
+          }
           document.body.style.cursor = 'pointer';
         } else {
           if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
           INTERSECTED = null;
           document.body.style.cursor = 'auto';
-          }
+        }
         render();
       } else {
         controls.enabled = true;
       }
     }
 
-    function onClick(event){
-      mouse.x = event.clientX - window.innerWidth/2;
-      mouse.y = -(event.clientY - window.innerHeight/2);
+    function onClick(event) {
+      mouse.x = event.clientX - window.innerWidth / 2;
+      mouse.y = -(event.clientY - window.innerHeight / 2);
       render();
     }
 
-    function onMouseDown(event){
-      req = requestAnimationFrame( animate );
+    function onMouseDown(event) {
+      req = requestAnimationFrame(animate);
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera);
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       var intersects = raycaster.intersectObjects(controlPoints);
       if (intersects.length > 0) {
         if (event.button == 0) {
@@ -277,16 +314,16 @@
           document.body.style.cursor = 'move';
         } else if (event.button == 2 && document.getElementById("edit").checked) {
           id = controlPoints.indexOf(intersects[0].object);
-          console.log("index: "+id);
+          console.log("index: " + id);
           document.getElementById('weight').value = weights[id];
           show_waga();
         }
       }
-      console.log("klawisz: "+event.button);
+      console.log("klawisz: " + event.button);
       render();
     }
 
-    function onMouseUp(event){
+    function onMouseUp(event) {
       event.preventDefault();
       if (INTERSECTED) {
         SELECTED = null;
@@ -296,4 +333,5 @@
     }
   </script>
 </body>
+
 </html>
