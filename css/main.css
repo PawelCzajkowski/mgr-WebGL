@@ -4,6 +4,7 @@ body {
   font-family: sans-serif;
   overflow: hidden;
 }
+
 #navi {
   list-style-type: none;
   position: fixed;
@@ -15,11 +16,13 @@ body {
   border-style: groove;
   font-size: 18px;
 }
+
 li {
   display: block;
   text-align: center;
   margin-top: 4px;
 }
+
 li a {
   border: darkgreen solid 1px;
   display: block;
@@ -28,26 +31,34 @@ li a {
   background-color: green;
   text-decoration: none;
 }
+
 li a:hover {
   background-color: #555;
   color: white;
 }
-a.nowy{
+
+a.nowy {
   margin-top: -4px;
 }
+
 #suwak {
   position: static;
   width: 98%;
 }
+
 #label {
   text-align: justify;
   position: fixed;
 }
+
 input[type=number] {
   display: inline-block;
   margin-left: 10px;
   width: 40px;
 }
+
+input[type=number]:hover {}
+
 div.suwak {
   display: block;
   text-align: center;
@@ -60,12 +71,15 @@ div.suwak {
   border-width: thin;
   border-style: groove;
 }
+
 input.suwak {
   margin-right: 20px;
 }
+
 input.knot {
   margin: 0;
 }
+
 #form {
   display: block;
   position: absolute;
@@ -77,7 +91,10 @@ input.knot {
   padding: 20px;
   font-size: 18px;
 }
-#popup, #waga, #wezly {
+
+#popup,
+#waga,
+#wezly {
   display: block;
   position: fixed;
   visibility: hidden;
@@ -85,8 +102,9 @@ input.knot {
   height: 100%;
   left: 0;
   top: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
 }
+
 button {
   margin-top: 20px;
   background-color: darkgreen;
@@ -97,4 +115,18 @@ button {
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+}
+
+.wartosc {
+  display: inline-block;
+  width: 25px;
+  margin-left: 3px;
+  margin-right: 3px;
+  padding: 2px;
+  color: darkslateblue;
+  border: solid 1px;
+}
+
+.suwak2 {
+  margin: 0px 8px 0px 8px;
 }
