@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Applet 8.40</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
-  </head>
+</head>
+
 <body>
   <ul id="navi">
-    <li style="padding: 8px"><input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li style="padding: 8px">
+      <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -16,7 +19,8 @@
   <script>
     var raycaster, scene, camera, renderer, plane, GoP, GoB;
     var INTERSECTED, SELECTED;
-    var points = [], controlPoints = [];
+    var points = [],
+      controlPoints = [];
     var geometries = [];
 
     var mouse = new THREE.Vector2();
@@ -32,42 +36,48 @@
       var i = points.indexOf(base);
       var temp = new THREE.Vector3();
       if (i != -1) {
-        if (i == 0 || i == points.length-1) {return}
-        else {
+        if (i == 0 || i == points.length - 1) {
+          return
+        } else {
           temp.subVectors(base.position, prev);
-          controlPoints[2*i-1].position.add(temp);
-          controlPoints[2*i].position.add(temp);
+          controlPoints[2 * i - 1].position.add(temp);
+          controlPoints[2 * i].position.add(temp);
         }
       }
       //sprawdzenie punktow kontrolnych
       i = controlPoints.indexOf(base);
       if (i != -1) {
-        if ( i == 0 || i == controlPoints.length-1) {return}
-        else {
-          if (i%2 == 0) {
-            temp.subVectors(controlPoints[i].position, points[i/2].position);
-            controlPoints[i-1].position.subVectors(points[i/2].position, temp);
+        if (i == 0 || i == controlPoints.length - 1) {
+          return
+        } else {
+          if (i % 2 == 0) {
+            temp.subVectors(controlPoints[i].position, points[i / 2].position);
+            controlPoints[i - 1].position.subVectors(points[i / 2].position, temp);
           } else {
-            temp.subVectors(points[(i+1)/2].position, controlPoints[i].position);
-            controlPoints[i+1].position.addVectors(points[(i+1)/2].position, temp);
+            temp.subVectors(points[(i + 1) / 2].position, controlPoints[i].position);
+            controlPoints[i + 1].position.addVectors(points[(i + 1) / 2].position, temp);
           }
         }
       }
     }
 
-    function drawBezier(geo){
+    function drawBezier(geo) {
       scene.remove(scene.getObjectByName('line'));
       for (var j = 0; j < i; j++) {
         geometries[j].verticesNeedUpdate = true;
         var curve = new THREE.CubicBezierCurve(geo[j].vertices[0], geo[j].vertices[1], geo[j].vertices[2], geo[j].vertices[3]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
-        var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+        var path = new THREE.Path(curve.getPoints(30));
+        var Cgeometry = path.createPointsGeometry(30);
+        var Cmaterial = new THREE.LineBasicMaterial({
+          color: 0xff0000
+        });
         var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
         cubicBezier.name = 'bezier';
         GoB.add(cubicBezier);
 
-        var line = new THREE.LineSegments(geo[j], new THREE.LineBasicMaterial({color: "black"}));
+        var line = new THREE.LineSegments(geo[j], new THREE.LineBasicMaterial({
+          color: "black"
+        }));
         line.name = "lines";
         scene.add(line);
       }
@@ -75,7 +85,9 @@
 
     function addPoint(Px, Py) {
       i++
-      var pMaterial = new THREE.SpriteMaterial({color: "green"});
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "green"
+      });
       var point = new THREE.Sprite(pMaterial);
       point.position.x = Px;
       point.position.y = Py;
@@ -84,17 +96,20 @@
       GoP.add(point);
       points.push(point);
 
-      if(points.length == 2) {
+      if (points.length == 2) {
         var geometry = new THREE.Geometry();
         geometry.vertices.push(points[0].position);
         geometry.vertices.push(points[1].position);
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
         lines.name = "line";
         scene.add(lines);
-      } else if(points.length > 2)
-      {
+      } else if (points.length > 2) {
         if (points.length == 3) {
-          pMaterial = new THREE.SpriteMaterial({color: "blue"});
+          pMaterial = new THREE.SpriteMaterial({
+            color: "blue"
+          });
           point = new THREE.Sprite(pMaterial);
           point.position.subVectors(points[1].position, points[0].position);
           point.position.divideScalar(3);
@@ -103,7 +118,9 @@
           controlPoints.push(point);
           GoP.add(point);
 
-          pMaterial = new THREE.SpriteMaterial({color: "blue"});
+          pMaterial = new THREE.SpriteMaterial({
+            color: "blue"
+          });
           point = new THREE.Sprite(pMaterial);
           point.position.subVectors(points[0].position, points[2].position);
           point.position.divideScalar(3);
@@ -119,17 +136,21 @@
           geometry.vertices.push(points[1].position);
           geometries[0] = geometry;
         }
-        pMaterial = new THREE.SpriteMaterial({color: "blue"});
+        pMaterial = new THREE.SpriteMaterial({
+          color: "blue"
+        });
         point = new THREE.Sprite(pMaterial);
-        point.position.subVectors(points[i-1].position, controlPoints[controlPoints.length-1].position);
-        point.position.add(points[i-1].position);
+        point.position.subVectors(points[i - 1].position, controlPoints[controlPoints.length - 1].position);
+        point.position.add(points[i - 1].position);
         point.scale.x = point.scale.y = 10;
         controlPoints.push(point);
         GoP.add(point);
 
-        pMaterial = new THREE.SpriteMaterial({color: "blue"});
+        pMaterial = new THREE.SpriteMaterial({
+          color: "blue"
+        });
         point = new THREE.Sprite(pMaterial);
-        point.position.subVectors(points[i].position, controlPoints[controlPoints.length-1].position);
+        point.position.subVectors(points[i].position, controlPoints[controlPoints.length - 1].position);
         point.position.divideScalar(2);
         point.position.negate();
         point.position.add(points[i].position);
@@ -138,11 +159,11 @@
         GoP.add(point);
 
         var geometry = new THREE.Geometry();
-        geometry.vertices.push(points[i-1].position);
-        geometry.vertices.push(controlPoints[controlPoints.length-2].position);
-        geometry.vertices.push(controlPoints[controlPoints.length-1].position);
+        geometry.vertices.push(points[i - 1].position);
+        geometry.vertices.push(controlPoints[controlPoints.length - 2].position);
+        geometry.vertices.push(controlPoints[controlPoints.length - 1].position);
         geometry.vertices.push(points[i].position);
-        geometries[i-1] = geometry;
+        geometries[i - 1] = geometry;
         drawBezier(geometries);
       }
       render();
@@ -155,38 +176,41 @@
 
     function webglAvailable() {
       try {
-        var canvas = document.createElement( 'canvas' );
-        return !!( window.WebGLRenderingContext && (
-          canvas.getContext( 'webgl' ) ||
-          canvas.getContext( 'experimental-webgl' ) )
-                 );
-      } catch ( e ) {
+        var canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (
+          canvas.getContext('webgl') ||
+          canvas.getContext('experimental-webgl')));
+      } catch (e) {
         return false;
       }
     }
 
-    function init(){
+    function init() {
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+      camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
       camera.position.z = 100;
 
-      if ( webglAvailable() ) {
-        renderer = new THREE.WebGLRenderer({antialias:true});
+      if (webglAvailable()) {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true
+        });
       } else {
         renderer = new THREE.CanvasRenderer();
       }
       renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth,window.innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-          new THREE.MeshBasicMaterial( { visible: false } )
-        );
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        })
+      );
       scene.add(plane);
       GoP = new THREE.Group();
       scene.add(GoP);
@@ -194,14 +218,14 @@
       GoB = new THREE.Group();
       scene.add(GoB);
 
-      window.addEventListener("resize",onResize,false);
-      renderer.domElement.addEventListener("mousemove",onMove,false);
-      renderer.domElement.addEventListener("click",onClick,false);
-      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
-      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+      window.addEventListener("resize", onResize, false);
+      renderer.domElement.addEventListener("mousemove", onMove, false);
+      renderer.domElement.addEventListener("click", onClick, false);
+      renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+      renderer.domElement.addEventListener("mouseup", onMouseUp, false);
     }
 
-    function resetScene(){
+    function resetScene() {
       try {
         GoB.children = [];
         GoP.children = [];
@@ -213,25 +237,25 @@
         i = -1;
         renderer.clear();
       } catch (err) {
-        console.log("Error: "+err.message);
+        console.log("Error: " + err.message);
       }
     }
 
-    function onResize(){
-      camera.left = window.innerWidth/-2;
-      camera.right = window.innerWidth/2;
-      camera.top = window.innerHeight/2;
-      camera.down = window.innerWidth/-2;
+    function onResize() {
+      camera.left = window.innerWidth / -2;
+      camera.right = window.innerWidth / 2;
+      camera.top = window.innerHeight / 2;
+      camera.down = window.innerWidth / -2;
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function onMove(event){
+    function onMove(event) {
       if (document.getElementById("edit").checked) {
         event.preventDefault();
-        mouse.x = (event.clientX/window.innerWidth)*2-1;
-        mouse.y = -(event.clientY/window.innerHeight)*2+1;
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         if (SELECTED) {
           requestAnimationFrame(render);
@@ -251,38 +275,38 @@
         }
 
         var intersects = raycaster.intersectObjects(GoP.children);
-        if(intersects.length > 0){
-            //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
-            if (INTERSECTED != intersects[0].object) {
-              INTERSECTED = intersects[0].object;
-              temp = INTERSECTED.material.color.getHex();
-              INTERSECTED.material.color.set("red");
-              plane.position.copy( INTERSECTED.position );
-            }
+        if (intersects.length > 0) {
+          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+          if (INTERSECTED != intersects[0].object) {
+            INTERSECTED = intersects[0].object;
+            temp = INTERSECTED.material.color.getHex();
+            INTERSECTED.material.color.set("red");
+            plane.position.copy(INTERSECTED.position);
+          }
           document.body.style.cursor = 'pointer';
         } else {
           if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
           INTERSECTED = null;
           document.body.style.cursor = 'auto';
-          }
+        }
         render();
       }
     }
 
-    function onClick(event){
-      mouse.x = event.clientX - window.innerWidth/2;
-      mouse.y = -(event.clientY - window.innerHeight/2);
-      if(!document.getElementById("edit").checked){
+    function onClick(event) {
+      mouse.x = event.clientX - window.innerWidth / 2;
+      mouse.y = -(event.clientY - window.innerHeight / 2);
+      if (!document.getElementById("edit").checked) {
         addPoint(mouse.x, mouse.y);
       }
       render();
     }
 
-    function onMouseDown(event){
+    function onMouseDown(event) {
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera);
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       var intersects = raycaster.intersectObjects(GoP.children);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
@@ -295,7 +319,7 @@
       render();
     }
 
-    function onMouseUp(event){
+    function onMouseUp(event) {
       event.preventDefault();
       if (INTERSECTED) {
         plane.position.copy(INTERSECTED.position);
@@ -306,4 +330,5 @@
     }
   </script>
 </body>
+
 </html>

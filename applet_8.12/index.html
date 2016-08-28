@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Applet 8.12</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
-  </head>
+</head>
+
 <body>
   <ul id="navi">
     <li style="margin: 5 10 0 10">Stopień krzywej</li>
-    <li><input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
-    <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
-    <li><input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
-    <li><input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+    <li>
+      <input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
+    <li>
+      <input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
+    <li>
+      <input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
+    <li>
+      <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -24,12 +30,16 @@
     var INTERSECTED, SELECTED;
     var points = [];
     var geometry = new THREE.Geometry();
-    var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    var Cmaterial = new THREE.LineBasicMaterial({
+      color: 0xff0000
+    });
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
-    var GUI = {stopien: 2}
+    var GUI = {
+      stopien: 2
+    }
 
     function setDeg(val) {
       GUI.stopien = val;
@@ -43,34 +53,34 @@
 
     function show() {
       document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
-      if(document.getElementsByName("krzywizna").checked) {
-          drawCurvature(curve, Cgeometry);
-        } else if (scene.getObjectByName("krzywizna") !== undefined ){
-          scene.remove(scene.getObjectByName("krzywizna"));
-        }
+      if (document.getElementsByName("krzywizna").checked) {
+        drawCurvature(curve, Cgeometry);
+      } else if (scene.getObjectByName("krzywizna") !== undefined) {
+        scene.remove(scene.getObjectByName("krzywizna"));
+      }
       render();
     }
 
     init();
     render();
 
-    function drawBezier(){
+    function drawBezier() {
       if (geometry.vertices.length == 3) {
         curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        Cgeometry = path.createPointsGeometry( 30 );
+        var path = new THREE.Path(curve.getPoints(30));
+        Cgeometry = path.createPointsGeometry(30);
         var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
-        if(document.getElementsByName("krzywizna").checked) {
+        if (document.getElementsByName("krzywizna").checked) {
           drawCurvature(curve, Cgeometry);
         }
         quadraticBezier.name = 'bezier';
         scene.add(quadraticBezier);
       } else if (geometry.vertices.length == 4) {
         curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        Cgeometry = path.createPointsGeometry( 30 );
+        var path = new THREE.Path(curve.getPoints(30));
+        Cgeometry = path.createPointsGeometry(30);
         var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
-        if(document.getElementsByName("krzywizna").checked) {
+        if (document.getElementsByName("krzywizna").checked) {
           drawCurvature(curve, Cgeometry);
         }
         cubicBezier.name = 'bezier';
@@ -81,14 +91,18 @@
     function drawCurvature(Curve, Geometry) {
       var cGeometry = new THREE.Geometry();
       cGeometry = wyznaczKrzywizne(Curve, geometry.vertices, 50, GUI.stopien);
-      var cMaterial = new THREE.LineBasicMaterial({color: "blue"});
+      var cMaterial = new THREE.LineBasicMaterial({
+        color: "blue"
+      });
       var cLines = new THREE.LineSegments(cGeometry, cMaterial);
       cLines.name = "krzywizna";
       scene.add(cLines);
     }
 
     function addPoint(Px, Py) {
-      var pMaterial = new THREE.SpriteMaterial({color: "green"});
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "green"
+      });
       var point = new THREE.Sprite(pMaterial);
       point.scale.x = point.scale.y = 10;
       point.position.x = Px;
@@ -97,22 +111,25 @@
       points.push(point);
       geometry.vertices.push(point.position);
 
-      if(GUI.stopien == 2 && geometry.vertices.length == 3) {
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      if (GUI.stopien == 2 && geometry.vertices.length == 3) {
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
         scene.add(lines);
         drawBezier();
-      } else if(GUI.stopien == 3 && geometry.vertices.length == 4)
-      {
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      } else if (GUI.stopien == 3 && geometry.vertices.length == 4) {
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
         scene.add(lines);
         drawBezier();
       }
     }
 
     function render() {
-      if(document.getElementsByName("otoczka").checked) {
+      if (document.getElementsByName("otoczka").checked) {
         rysujOtoczke(copyPoints(points));
-      } else if (scene.getObjectByName("otoczka") !== undefined ){
+      } else if (scene.getObjectByName("otoczka") !== undefined) {
         scene.remove(scene.getObjectByName("otoczka"));
       }
       camera.lookAt(scene.position);
@@ -121,38 +138,41 @@
 
     function webglAvailable() {
       try {
-        var canvas = document.createElement( 'canvas' );
-        return !!( window.WebGLRenderingContext && (
-          canvas.getContext( 'webgl' ) ||
-          canvas.getContext( 'experimental-webgl' ) )
-                 );
-      } catch ( e ) {
+        var canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (
+          canvas.getContext('webgl') ||
+          canvas.getContext('experimental-webgl')));
+      } catch (e) {
         return false;
       }
     }
 
-    function init(){
+    function init() {
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+      camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
       camera.position.z = 100;
 
-      if ( webglAvailable() ) {
-        renderer = new THREE.WebGLRenderer({antialias:true});
+      if (webglAvailable()) {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true
+        });
       } else {
         renderer = new THREE.CanvasRenderer();
       }
       renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth,window.innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-          new THREE.MeshBasicMaterial( { visible: false } )
-        );
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        })
+      );
       scene.add(plane);
 
       geometry = new THREE.Geometry();
@@ -164,7 +184,7 @@
       renderer.domElement.addEventListener("mouseup", onMouseUp, false);
     }
 
-    function resetScene(){
+    function resetScene() {
       //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
       //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
       try {
@@ -176,25 +196,25 @@
         scene.children = [];
         renderer.clear();
       } catch (err) {
-        console.log("Error: "+err.message);
+        console.log("Error: " + err.message);
       }
     }
 
-    function onResize(){
-      camera.left = window.innerWidth/-2;
-      camera.right = window.innerWidth/2;
-      camera.top = window.innerHeight/2;
-      camera.down = window.innerWidth/-2;
+    function onResize() {
+      camera.left = window.innerWidth / -2;
+      camera.right = window.innerWidth / 2;
+      camera.top = window.innerHeight / 2;
+      camera.down = window.innerWidth / -2;
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
       render();
     }
 
-    function onMove(event){
+    function onMove(event) {
       event.preventDefault();
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       if (SELECTED) {
         requestAnimationFrame(render);
@@ -213,37 +233,37 @@
       }
 
       var intersects = raycaster.intersectObjects(points);
-      if(intersects.length > 0){
-          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
-          if (INTERSECTED != intersects[0].object) {
-            INTERSECTED = intersects[0].object;
-            temp = INTERSECTED.material.color.getHex();
-            INTERSECTED.material.color.set("red");
-            plane.position.copy( INTERSECTED.position );
-          }
+      if (intersects.length > 0) {
+        //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+        if (INTERSECTED != intersects[0].object) {
+          INTERSECTED = intersects[0].object;
+          temp = INTERSECTED.material.color.getHex();
+          INTERSECTED.material.color.set("red");
+          plane.position.copy(INTERSECTED.position);
+        }
         document.body.style.cursor = 'pointer';
       } else {
         if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
         INTERSECTED = null;
         document.body.style.cursor = 'auto';
-        }
+      }
       render();
     }
 
-    function onClick(event){
-      mouse.x = event.clientX - window.innerWidth/2;
-      mouse.y = -(event.clientY - window.innerHeight/2);
-      if(geometry.vertices.length < Number(GUI.stopien)+1){
+    function onClick(event) {
+      mouse.x = event.clientX - window.innerWidth / 2;
+      mouse.y = -(event.clientY - window.innerHeight / 2);
+      if (geometry.vertices.length < Number(GUI.stopien) + 1) {
         addPoint(mouse.x, mouse.y);
       }
       render();
     }
 
-    function onMouseDown(event){
+    function onMouseDown(event) {
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera);
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       var intersects = raycaster.intersectObjects(points);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
@@ -256,7 +276,7 @@
       render();
     }
 
-    function onMouseUp(event){
+    function onMouseUp(event) {
       event.preventDefault();
       if (INTERSECTED) {
         plane.position.copy(INTERSECTED.position);
@@ -266,4 +286,5 @@
     }
   </script>
 </body>
+
 </html>

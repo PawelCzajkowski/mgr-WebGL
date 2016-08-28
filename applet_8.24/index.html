@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Applet 8.24</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
-  </head>
+</head>
+
 <body>
   <ul id="navi">
     <li style="margin: 5px 10px 0 10px">Stopień krzywej</li>
-    <li><input type="radio" id='drugi' name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
-    <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
+    <li>
+      <input type="radio" id='drugi' name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
+    <li>
+      <input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
     <li><a href="#" style="margin-top: 5px" onclick="algorytm_dC( geometry.vertices, GUI);">Dalej</a></li>
   </ul>
@@ -21,12 +25,16 @@
     var INTERSECTED, SELECTED;
     var points = [];
     var geometry = new THREE.Geometry();
-    var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    var Cmaterial = new THREE.LineBasicMaterial({
+      color: 0xff0000
+    });
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
-    var GUI = {stopien: 2}
+    var GUI = {
+      stopien: 2
+    }
 
     function setDeg(val) {
       GUI.stopien = val;
@@ -36,17 +44,19 @@
     init();
     render();
 
-    function algorytm_dC( Arr, deg) {
+    function algorytm_dC(Arr, deg) {
       var n = Arr.length;
       var newGeometry = new THREE.Geometry();
-      for(var i = 1; i <= deg.stopien; ++i) {
+      for (var i = 1; i <= deg.stopien; ++i) {
         var c = new THREE.Vector3();
-        c.subVectors(Arr[n-i],Arr[n-i-1]);
+        c.subVectors(Arr[n - i], Arr[n - i - 1]);
         c.multiplyScalar(0.5);
-        c.add(Arr[n-i-1]);
+        c.add(Arr[n - i - 1]);
         newGeometry.vertices.push(c);
       }
-      var lines = new THREE.Line(newGeometry, new THREE.LineBasicMaterial({color: "blue"}));
+      var lines = new THREE.Line(newGeometry, new THREE.LineBasicMaterial({
+        color: "blue"
+      }));
       scene.add(lines);
       render();
       geometry = newGeometry.clone();
@@ -58,18 +68,18 @@
       }
     }
 
-    function drawBezier(geometry){
+    function drawBezier(geometry) {
       if (geometry.vertices.length == 3) {
         var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
+        var path = new THREE.Path(curve.getPoints(30));
+        var Cgeometry = path.createPointsGeometry(30);
         var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
         quadraticBezier.name = 'bezier';
         scene.add(quadraticBezier);
       } else if (geometry.vertices.length == 4) {
         var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
+        var path = new THREE.Path(curve.getPoints(30));
+        var Cgeometry = path.createPointsGeometry(30);
         var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
         cubicBezier.name = 'bezier';
         scene.add(cubicBezier);
@@ -77,7 +87,9 @@
     }
 
     function drawPoint(position) {
-      var pMaterial = new THREE.SpriteMaterial({color: "red"});
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "red"
+      });
       var point = new THREE.Sprite(pMaterial);
       point.position.x = position.x;
       point.position.y = position.y;
@@ -86,7 +98,9 @@
     }
 
     function addPoint(Px, Py) {
-      var pMaterial = new THREE.SpriteMaterial({color: "green"});
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "green"
+      });
       var point = new THREE.Sprite(pMaterial);
       point.scale.x = point.scale.y = 10;
       point.position.x = Px;
@@ -95,13 +109,16 @@
       points.push(point);
       geometry.vertices.push(point.position);
 
-      if(GUI.stopien == 2 && geometry.vertices.length == 3) {
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      if (GUI.stopien == 2 && geometry.vertices.length == 3) {
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
         scene.add(lines);
         drawBezier(geometry);
-      } else if(GUI.stopien == 3 && geometry.vertices.length == 4)
-      {
-        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      } else if (GUI.stopien == 3 && geometry.vertices.length == 4) {
+        var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
         scene.add(lines);
         drawBezier(geometry);
       }
@@ -112,33 +129,35 @@
       renderer.render(scene, camera);
     }
 
-    function init(){
+    function init() {
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+      camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
       camera.position.z = 100;
 
       renderer = new THREE.CanvasRenderer();
       renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth,window.innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-          new THREE.MeshBasicMaterial( { visible: false } )
-        );
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        })
+      );
       scene.add(plane);
 
       geometry = new THREE.Geometry();
 
-      window.addEventListener("resize",onResize,false);
-      renderer.domElement.addEventListener("click",onClick,false);
+      window.addEventListener("resize", onResize, false);
+      renderer.domElement.addEventListener("click", onClick, false);
     }
 
-    function resetScene(){
+    function resetScene() {
       try {
         //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
         //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
@@ -146,30 +165,31 @@
         geometry = new THREE.Geometry();
         scene.children = [];
         renderer.clear();
-        (document.getElementById('drugi').checked) ? GUI.stopien = 2 : GUI.stopien = 3;
+        (document.getElementById('drugi').checked) ? GUI.stopien = 2: GUI.stopien = 3;
       } catch (err) {
-        console.error("Error: "+err.message);
+        console.error("Error: " + err.message);
       }
     }
 
-    function onResize(){
-      camera.left = window.innerWidth/-2;
-      camera.right = window.innerWidth/2;
-      camera.top = window.innerHeight/2;
-      camera.down = window.innerWidth/-2;
+    function onResize() {
+      camera.left = window.innerWidth / -2;
+      camera.right = window.innerWidth / 2;
+      camera.top = window.innerHeight / 2;
+      camera.down = window.innerWidth / -2;
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function onClick(event){
-      mouse.x = event.clientX - window.innerWidth/2;
-      mouse.y = -(event.clientY - window.innerHeight/2);
-      if(geometry.vertices.length < Number(GUI.stopien)+1){
+    function onClick(event) {
+      mouse.x = event.clientX - window.innerWidth / 2;
+      mouse.y = -(event.clientY - window.innerHeight / 2);
+      if (geometry.vertices.length < Number(GUI.stopien) + 1) {
         addPoint(mouse.x, mouse.y);
       }
       render();
     }
   </script>
 </body>
+
 </html>

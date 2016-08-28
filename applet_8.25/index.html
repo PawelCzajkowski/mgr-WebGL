@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Applet 8.25</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
-  </head>
+</head>
+
 <body>
   <ul id="navi">
     <li style="margin: 5px 10px 0px 10px">Stopień krzywej</li>
-    <li><input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
-    <li><input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
+    <li>
+      <input type="radio" name="stopien" value="2" onclick="setDeg(this.value)" checked>2</li>
+    <li>
+      <input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
-  <div class="suwak">Przesunięcie punktu<input style="width: auto" type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="draw_deCasteljau()" onclick="draw_deCasteljau()">
+  <div class="suwak">Przesunięcie punktu
+    <input style="width: auto" type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="draw_deCasteljau()" onclick="draw_deCasteljau()">
   </div>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
@@ -22,12 +27,16 @@
     var INTERSECTED, SELECTED;
     var points = [];
     var geometry = new THREE.Geometry();
-    var Cmaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    var Cmaterial = new THREE.LineBasicMaterial({
+      color: 0xff0000
+    });
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
-    var GUI = {stopien: 2}
+    var GUI = {
+      stopien: 2
+    }
     var group = new THREE.Group();
 
     function setDeg(val) {
@@ -38,35 +47,41 @@
     init();
     render();
 
-    function draw_deCasteljau(){
+    function draw_deCasteljau() {
       var val = document.getElementById('suwak').value;
       try {
         group.children = [];
-      } catch (e) { console.error(e.message)};
-      if (GUI.stopien+1 == geometry.vertices.length){
-        algorytm_dC( geometry.vertices, GUI.stopien, val);
+      } catch (e) {
+        console.error(e.message)
+      };
+      if (GUI.stopien + 1 == geometry.vertices.length) {
+        algorytm_dC(geometry.vertices, GUI.stopien, val);
       }
       render();
       if (document.getElementsByName("stopien")[0].checked) {
         GUI.stopien = 2;
-      } else {GUI.stopien = 3};
+      } else {
+        GUI.stopien = 3
+      };
       geometry = new THREE.Geometry();
-      for (var i=0; i < points.length; i++) {
+      for (var i = 0; i < points.length; i++) {
         geometry.vertices.push(points[i].position);
       }
     }
 
-    function algorytm_dC( Arr, deg, val) {
+    function algorytm_dC(Arr, deg, val) {
       var n = Arr.length;
       var newGeometry = new THREE.Geometry();
-      for(var i = 1; i < n; ++i) {
+      for (var i = 1; i < n; ++i) {
         var c = new THREE.Vector3();
-        c.subVectors(Arr[i],Arr[i-1]);
+        c.subVectors(Arr[i], Arr[i - 1]);
         c.multiplyScalar(val);
-        c.add(Arr[i-1]);
+        c.add(Arr[i - 1]);
         newGeometry.vertices.push(c);
       }
-      var lines = new THREE.Line(newGeometry, new THREE.LineBasicMaterial({color: "blue"}));
+      var lines = new THREE.Line(newGeometry, new THREE.LineBasicMaterial({
+        color: "blue"
+      }));
       lines.name = "pomocnicze";
       group.add(lines);
       geometry = newGeometry.clone();
@@ -76,21 +91,21 @@
         render();
         return new THREE.Vector3(geometry.vertices[0]);
       }
-      algorytm_dC( geometry.vertices, deg, val);
+      algorytm_dC(geometry.vertices, deg, val);
     }
 
-    function drawBezier(geometry){
+    function drawBezier(geometry) {
       if (geometry.vertices.length == 3) {
         var curve = new THREE.QuadraticBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
+        var path = new THREE.Path(curve.getPoints(30));
+        var Cgeometry = path.createPointsGeometry(30);
         var quadraticBezier = new THREE.Line(Cgeometry, Cmaterial);
         quadraticBezier.name = 'bezier';
         scene.add(quadraticBezier);
       } else if (geometry.vertices.length == 4) {
         var curve = new THREE.CubicBezierCurve(geometry.vertices[0], geometry.vertices[1], geometry.vertices[2], geometry.vertices[3]);
-        var path = new THREE.Path( curve.getPoints( 30 ) );
-        var Cgeometry = path.createPointsGeometry( 30 );
+        var path = new THREE.Path(curve.getPoints(30));
+        var Cgeometry = path.createPointsGeometry(30);
         var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
         cubicBezier.name = 'bezier';
         scene.add(cubicBezier);
@@ -98,7 +113,9 @@
     }
 
     function drawPoint(position) {
-      var pMaterial = new THREE.SpriteMaterial({color: "red"});
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "red"
+      });
       var point = new THREE.Sprite(pMaterial);
       point.position.x = position.x;
       point.position.y = position.y;
@@ -112,13 +129,17 @@
       } catch (e) {
         console.error(e.message);
       }
-      var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: "black"}));
+      var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+        color: "black"
+      }));
       lines.name = "wielobok";
       scene.add(lines);
     }
 
     function addPoint(Px, Py) {
-      var pMaterial = new THREE.SpriteMaterial({color: "green"});
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "green"
+      });
       var point = new THREE.Sprite(pMaterial);
       point.scale.x = point.scale.y = 10;
       point.position.x = Px;
@@ -127,11 +148,10 @@
       points.push(point);
       geometry.vertices.push(point.position);
 
-      if(GUI.stopien == 2 && geometry.vertices.length == 3) {
+      if (GUI.stopien == 2 && geometry.vertices.length == 3) {
         drawLine(geometry);
         drawBezier(geometry);
-      } else if(GUI.stopien == 3 && geometry.vertices.length == 4)
-      {
+      } else if (GUI.stopien == 3 && geometry.vertices.length == 4) {
         drawLine(geometry);
         drawBezier(geometry);
       }
@@ -144,52 +164,56 @@
 
     function webglAvailable() {
       try {
-        var canvas = document.createElement( 'canvas' );
-        var isWebGL = !!( window.WebGLRenderingContext && (
-          canvas.getContext( 'webgl' ) ||
-          canvas.getContext( 'experimental-webgl' )));
+        var canvas = document.createElement('canvas');
+        var isWebGL = !!(window.WebGLRenderingContext && (
+          canvas.getContext('webgl') ||
+          canvas.getContext('experimental-webgl')));
         return isWebGL;
-      } catch ( e ) {
+      } catch (e) {
         return false;
       }
     }
 
-    function init(){
+    function init() {
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
-      camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+      camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
       camera.position.z = 100;
 
       if (webglAvailable()) {
-        renderer = new THREE.WebGLRenderer({antialias:true});
+        renderer = new THREE.WebGLRenderer({
+          antialias: true
+        });
       } else {
         renderer = new THREE.CanvasRenderer();
       }
       renderer.setClearColor("white");
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth,window.innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-          new THREE.MeshBasicMaterial( { visible: false } )
-        );
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        })
+      );
       scene.add(plane);
 
       geometry = new THREE.Geometry();
       group.name = "pomocnicze";
       scene.add(group);
 
-      window.addEventListener("resize",onResize,false);
-      renderer.domElement.addEventListener("mousemove",onMove,false);
-      renderer.domElement.addEventListener("click",onClick,false);
-      renderer.domElement.addEventListener("mousedown",onMouseDown,false);
-      renderer.domElement.addEventListener("mouseup",onMouseUp,false);
+      window.addEventListener("resize", onResize, false);
+      renderer.domElement.addEventListener("mousemove", onMove, false);
+      renderer.domElement.addEventListener("click", onClick, false);
+      renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+      renderer.domElement.addEventListener("mouseup", onMouseUp, false);
     }
 
-    function resetScene(){
+    function resetScene() {
       try {
         //three.js uniemożliwia skracanie buffora wierzchołków. Operacje takie są kosztowene obliczeniowo.
         //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
@@ -201,24 +225,24 @@
         scene.add(group);
         renderer.clear();
       } catch (err) {
-        console.log("Error: "+err.message);
+        console.log("Error: " + err.message);
       }
     }
 
-    function onResize(){
-      camera.left = window.innerWidth/-2;
-      camera.right = window.innerWidth/2;
-      camera.top = window.innerHeight/2;
-      camera.down = window.innerWidth/-2;
+    function onResize() {
+      camera.left = window.innerWidth / -2;
+      camera.right = window.innerWidth / 2;
+      camera.top = window.innerHeight / 2;
+      camera.down = window.innerWidth / -2;
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function onMove(event){
+    function onMove(event) {
       event.preventDefault();
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       if (SELECTED) {
         requestAnimationFrame(render);
@@ -235,13 +259,13 @@
       }
 
       var intersects = raycaster.intersectObjects(points);
-      if(intersects.length > 0){
+      if (intersects.length > 0) {
         //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
         if (INTERSECTED != intersects[0].object) {
           INTERSECTED = intersects[0].object;
           temp = INTERSECTED.material.color.getHex();
           INTERSECTED.material.color.set("red");
-          plane.position.copy( INTERSECTED.position );
+          plane.position.copy(INTERSECTED.position);
         }
         document.body.style.cursor = 'pointer';
       } else {
@@ -252,20 +276,20 @@
       render();
     }
 
-    function onClick(event){
-      mouse.x = event.clientX - window.innerWidth/2;
-      mouse.y = -(event.clientY - window.innerHeight/2);
-      if(points.length < Number(GUI.stopien)+1){
+    function onClick(event) {
+      mouse.x = event.clientX - window.innerWidth / 2;
+      mouse.y = -(event.clientY - window.innerHeight / 2);
+      if (points.length < Number(GUI.stopien) + 1) {
         addPoint(mouse.x, mouse.y);
       }
       render();
     }
 
-    function onMouseDown(event){
+    function onMouseDown(event) {
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera);
-      mouse.x = (event.clientX/window.innerWidth)*2-1;
-      mouse.y = -(event.clientY/window.innerHeight)*2+1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       var intersects = raycaster.intersectObjects(points);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
@@ -278,7 +302,7 @@
       render();
     }
 
-    function onMouseUp(event){
+    function onMouseUp(event) {
       event.preventDefault();
       if (INTERSECTED) {
         plane.position.copy(INTERSECTED.position);
@@ -288,4 +312,5 @@
     }
   </script>
 </body>
+
 </html>

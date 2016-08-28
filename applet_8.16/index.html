@@ -183,7 +183,7 @@
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000, 8, 8),
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
         new THREE.MeshBasicMaterial({
           visible: false
         })
