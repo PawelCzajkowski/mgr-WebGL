@@ -14,6 +14,8 @@
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
       <input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
+    <li>
+      <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -26,7 +28,7 @@
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
     var points = [];
-    var geometry, positions, lines, weights;
+    var geometry, positions, lines, weights, bezier, Cgeometry;
     var isWebGL;
 
     var MAX_POINTS = 21;
@@ -36,12 +38,18 @@
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
-    function showRange() {
-
-    }
-
     function change() {
       document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
+      render();
+    }
+
+    function show() {
+      document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
+      if (document.getElementsByName("krzywizna").checked) {
+        drawCurvature(bezier, Cgeometry);
+      } else if (scene.getObjectByName("krzywizna") !== undefined) {
+        scene.remove(scene.getObjectByName("krzywizna"));
+      }
       render();
     }
 
@@ -52,22 +60,40 @@
       var item = document.getElementById(id);
       geometry.attributes.weight.array[id] = item.value;
       document.getElementById(id + "text").innerHTML = item.value;
-      console.log(id + " " + item.value);
       scene.remove(scene.getObjectByName('Bezier'));
       drawBezier(drawCount - 1, geometry.attributes);
       render();
     }
 
     function drawBezier(n, vertices) {
-      var bezier = new BezierCurve(n, vertices, true); //true oznacza ze uwzgledniane sa wagi
+      bezier = new BezierCurve(n, vertices, true); //true oznacza ze uwzgledniane sa wagi
       var Cpath = new THREE.Path(bezier.getPoints(20 * n));
-      var Cgeometry = Cpath.createPointsGeometry(20 * n);
+      Cgeometry = Cpath.createPointsGeometry(20 * n);
       var Cmaterial = new THREE.LineBasicMaterial({
         color: "red"
       });
       var curveObject = new THREE.Line(Cgeometry, Cmaterial);
       curveObject.name = 'Bezier';
       scene.add(curveObject);
+      if (document.getElementsByName("krzywizna").checked) {
+        scene.remove(scene.getObjectByName("krzywizna"));
+        drawCurvature(bezier, Cgeometry);
+      }
+    }
+
+    function drawCurvature(Curve, Geometry) {
+      var cGeometry = new THREE.Geometry();
+      var ctrlPoints = [];
+      for (var i = 0; i < points.length; i++) {
+        ctrlPoints.push(points[i].position);
+      }
+      cGeometry = wyznaczKrzywizne(Curve, ctrlPoints, 15 * points.length, points.length - 1);
+      var cMaterial = new THREE.LineBasicMaterial({
+        color: "blue"
+      });
+      var cLines = new THREE.LineSegments(cGeometry, cMaterial);
+      cLines.name = "krzywizna";
+      scene.add(cLines);
     }
 
     function addPoint(Px, Py) {
@@ -106,7 +132,7 @@
       item2.setAttribute("onchange", 'changeWeight(this.id)');
       item.appendChild(item2);
       item.setAttribute("align", "center");
-      list.insertBefore(item, list.childNodes[list.childNodes.length - 4]);
+      list.insertBefore(item, list.childNodes[list.childNodes.length - 9]);
       geometry.attributes.weight.array[idx / 3] = 5;
 
       var vertex = geometry.attributes.position.array;
