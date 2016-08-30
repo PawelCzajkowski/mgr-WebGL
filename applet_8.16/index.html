@@ -10,6 +10,7 @@
 <body>
 
   <ul id="navi">
+    <li style="margin: 10px">Stopień krzywej: <span id="stopien_krzywej">0</span></li>
     <li style="margin: 10">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
@@ -97,6 +98,7 @@
       point.position.y = Py;
       scene.add(point);
       points.push(point);
+      document.getElementById("stopien_krzywej").innerHTML = points.length - 1;
 
       var vertex = geometry.attributes.position.array;
       vertex[idx++] = Px;
