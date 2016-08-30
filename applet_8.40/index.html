@@ -10,6 +10,13 @@
 <body>
   <ul id="navi">
     <li style="padding: 8px">
+      <div style="margin: 10px">Klasa ciągłości:
+        <select id="ciaglosc">
+          <option value="G0">G0</option>
+          <option value="G1">G1</option>
+          <option value="C1" selected>C1</option>
+        </select>
+      </div>
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
@@ -32,7 +39,7 @@
     init();
     render();
 
-    function przeliczPunkty(base) {
+    function przeliczPunktyC1(base) {
       var i = points.indexOf(base);
       var temp = new THREE.Vector3();
       if (i != -1) {
@@ -56,6 +63,42 @@
           } else {
             temp.subVectors(points[(i + 1) / 2].position, controlPoints[i].position);
             controlPoints[i + 1].position.addVectors(points[(i + 1) / 2].position, temp);
+          }
+        }
+      }
+    }
+
+    function przeliczPunktyG1(base) {
+      var i = points.indexOf(base);
+      var temp = new THREE.Vector3();
+      var temp2 = new THREE.Vector3();
+      if (i != -1) {
+        if (i == 0 || i == points.length - 1) {
+          return;
+        } else {
+          temp.subVectors(base.position, prev);
+          controlPoints[2 * i - 1].position.add(temp);
+          controlPoints[2 * i].position.add(temp);
+        }
+      }
+
+      i = controlPoints.indexOf(base);
+      if (i != -1) {
+        if (i == 0 || i == controlPoints.length - 1) {
+          return;
+        } else {
+          if (i % 2 == 0) {
+            temp.subVectors(controlPoints[i].position, points[i / 2].position);
+            temp.normalize();
+            temp2.subVectors(points[i/2].position, controlPoints[i-1].position);
+            temp.multiplyScalar(temp2.length());
+            controlPoints[i-1].position.subVectors(points[i/2].position, temp);
+          } else {
+            temp.subVectors(controlPoints[i].position, points[(i+1) / 2].position);
+            temp.normalize();
+            temp2.subVectors(points[(i+1)/2].position, controlPoints[i+1].position);
+            temp.multiplyScalar(temp2.length());
+            controlPoints[i+1].position.subVectors(points[(i+1)/2].position, temp);
           }
         }
       }
@@ -267,7 +310,13 @@
               prev = SELECTED.position;
             }
             GoB.children = [];
-            przeliczPunkty(SELECTED);
+            var e = document.getElementById("ciaglosc");
+            var option = e.options[e.selectedIndex].value;
+            if (option === "G1") {
+              przeliczPunktyG1(SELECTED);
+            } else if (option === "C1") {
+              przeliczPunktyC1(SELECTED);
+            }
             prev = SELECTED.position.clone();
             drawBezier(geometries);
           }
