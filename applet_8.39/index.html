@@ -45,6 +45,7 @@
     function changeWeight(id) {
       var item = document.getElementById(id);
       nurbsPunktyKontrolne[id].w = Number(item.value);
+      document.getElementById(id + "text").innerHTML = item.value;
       drawNURBS();
     }
 
@@ -74,16 +75,20 @@
       item2.appendChild(text);
       item.appendChild(item2);
 
-      item2 = document.createElement("INPUT");
-      item2.setAttribute("type", "number");
-      item2.setAttribute("id", idx);
-      item2.setAttribute("onchange", 'changeWeight(this.id)');
+      item2 = document.createElement("span");
+      item2.setAttribute("class", "wartosc");
+      item2.setAttribute("id", idx + "text");
+      item2.innerHTML = "5";
+      item.appendChild(item2);
+      item2 = document.createElement("input");
+      item2.setAttribute("class", "suwak2");
+      item2.setAttribute("type", "range");
       item2.setAttribute("value", 5);
+      item2.setAttribute("step", 0.1);
       item2.setAttribute("min", 0.1);
       item2.setAttribute("max", 10);
-      item2.setAttribute("step", 0.1);
-      item2.setAttribute("size", 3);
-      //      item2.setAttribute("width", "center");
+      item2.setAttribute("id", idx);
+      item2.setAttribute("onchange", 'changeWeight(this.id)');
       item.appendChild(item2);
       list.insertBefore(item, list.childNodes[list.childNodes.length - 4]);
       idx++;
