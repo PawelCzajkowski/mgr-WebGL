@@ -53,7 +53,7 @@
     function show() {
       document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
       if (document.getElementsByName("krzywizna").checked) {
-        drawCurvature(bezier, Cgeometry);
+        drawCurvature(bezier);
       } else if (scene.getObjectByName("krzywizna") !== undefined) {
         scene.remove(scene.getObjectByName("krzywizna"));
       }
@@ -85,11 +85,11 @@
       scene.add(curveObject);
       if (document.getElementsByName("krzywizna").checked) {
         scene.remove(scene.getObjectByName("krzywizna"));
-        drawCurvature(bezier, Cgeometry);
+        drawCurvature(bezier);
       }
     }
 
-    function drawCurvature(Curve, Geometry) {
+    function drawCurvature(Curve) {
 
       var cGeometry = new THREE.Geometry();
       var ctrlPoints = [];
