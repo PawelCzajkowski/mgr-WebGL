@@ -9,22 +9,25 @@
 
 <body>
   <ul id="navi">
-    <li style="padding: 8px">
-      <div style="margin: 10px">Klasa ciągłości:
+      <div style="margin: 8px">Klasa ciągłości:
         <select id="ciaglosc">
           <option value="G0">G0</option>
           <option value="G1">G1</option>
           <option value="C1" selected>C1</option>
         </select>
       </div>
+    <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li>
+      <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
   <script src="../js/Projector.js"></script>
+  <script src="../js/math.js"></script>
   <script>
-    var raycaster, scene, camera, renderer, plane, GoP, GoB;
+    var raycaster, scene, camera, renderer, plane, GoP, GoB, GoC;
     var INTERSECTED, SELECTED;
     var points = [],
       controlPoints = [];
@@ -35,6 +38,27 @@
     var prev;
 
     var i = -1;
+
+    function show() {
+      document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
+      if (document.getElementsByName("krzywizna").checked) {
+        drawBezier(geometries);
+      } else if (scene.getObjectByName("krzywizna") !== undefined) {
+        scene.remove(scene.getObjectByName("krzywizna"));
+      }
+      render();
+    }
+
+    function drawCurvature(Curve, geo) {
+      var cGeometry = new THREE.Geometry();
+      cGeometry = wyznaczKrzywizne(Curve, geo.vertices, 50, 3);
+      var cMaterial = new THREE.LineBasicMaterial({
+        color: "blue"
+      });
+      var cLines = new THREE.LineSegments(cGeometry, cMaterial);
+      cLines.name = "krzywizna";
+      GoC.add(cLines);
+    }
 
     init();
     render();
@@ -117,6 +141,10 @@
         var cubicBezier = new THREE.Line(Cgeometry, Cmaterial);
         cubicBezier.name = 'bezier';
         GoB.add(cubicBezier);
+
+        if (document.getElementsByName("krzywizna").checked) {
+          drawCurvature(curve, geometries[j]);
+        }
 
         var line = new THREE.LineSegments(geo[j], new THREE.LineBasicMaterial({
           color: "black"
@@ -261,6 +289,9 @@
       GoB = new THREE.Group();
       scene.add(GoB);
 
+      GoC = new THREE.Group();
+      scene.add(GoC);
+
       window.addEventListener("resize", onResize, false);
       renderer.domElement.addEventListener("mousemove", onMove, false);
       renderer.domElement.addEventListener("click", onClick, false);
@@ -270,6 +301,7 @@
 
     function resetScene() {
       try {
+        scene.remove(scene.getObjectByName("krzywizna"));
         GoB.children = [];
         GoP.children = [];
         scene.children = [];
@@ -318,6 +350,7 @@
               przeliczPunktyC1(SELECTED);
             }
             prev = SELECTED.position.clone();
+            GoC.children = [];
             drawBezier(geometries);
           }
           return;
