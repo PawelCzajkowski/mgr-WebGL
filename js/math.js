@@ -25,7 +25,7 @@ function dwumian(n, k) {
 }
 
 //wyznacz punkty posredni do wyznacznia wektorów A, B, C i D
-//umożliwiających wyznacznie krzywizny 
+//umożliwiających wyznacznie krzywizny
 function wyznaczPunkty(inArray, u) {
   var temp = [inArray],
     temp2;
@@ -55,10 +55,6 @@ function wyznaczKrzywizne(curve, ctrlPoint, count, deg) {
         Vy[j] = ctrlPoint[j].y;
       }
     } else {
-      //      for (var j = 0; j < deg; j++) {
-      //        Vx[j] = ctrlPoint[j].x + (ctrlPoint[j + 1].x - ctrlPoint[j].x) * u;
-      //        Vy[j] = ctrlPoint[j].y + (ctrlPoint[j + 1].y - ctrlPoint[j].y) * u;
-      //      }
       temp = wyznaczPunkty(ctrlPoint, u);
       for (var k = 0; k < temp.length; k++) {
         Vx[k] = temp[k].x;
@@ -148,14 +144,132 @@ function rysujOtoczke(points) {
       oGeometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
   }
   var oMaterial = new THREE.MeshBasicMaterial({
-    color: "#12c3b5",
+    color: "#c5ebfb",
     side: THREE.DoubleSide,
     transparent: true,
-    opacity: 0.2
   });
   var oMesh = new THREE.Mesh(oGeometry, oMaterial);
   oMesh.name = "otoczka";
   scene.add(oMesh);
+}
+
+//algorytm Boehma do wyznaczania otoczki wypuklej
+function boehmAlgoritm(controlPoints, nurbs, degree) {
+  try {
+    scene.remove(scene.getObjectByName('otoczka'));
+    group = [];
+  } catch (e) {
+    console.log(e.message);
+  }
+
+  var geometry, mesh, arr;
+  var processed = [],
+    processed2 = [];
+  var temp = new THREE.Vector3();
+  var group = new THREE.Group();
+  group.name = "otoczka";
+  scene.add(group);
+
+  var material = new THREE.MeshBasicMaterial({
+    color: "#c5ebfb",
+    side: THREE.DoubleSide,
+    transparent: true,
+  });
+  if (degree == 2) {
+    geometry = new THREE.Geometry();
+    if (controlPoints.length == 3) {
+      for (var i = 0; i < 3; i++) {
+        controlPoints[i].position.z = -10;
+        geometry.vertices.push(controlPoints[i].position);
+      }
+      geometry.faces.push(new THREE.Face3(0, 1, 2));
+    } else if (controlPoints.length > 3) {
+      //wyznaczenie wierzcholkow Beziera
+      for (var i = 1; i <= controlPoints.length - 3; i++) {
+        temp.subVectors(controlPoints[i + 1].position, controlPoints[i].position);
+        temp.divideScalar(2);
+        processed.push(new THREE.Vector3().addVectors(controlPoints[i].position, temp));
+      }
+
+      //definiowanie geometrii
+      geometry.vertices.push(controlPoints[0].position, controlPoints[1].position);
+      for (var i = 0; i < processed.length; i++) {
+        geometry.vertices.push(processed[i], controlPoints[i + 2].position);
+        geometry.faces.push(new THREE.Face3(2 * i, 2 * i + 1, 2 * i + 2));
+      }
+      geometry.vertices.push(controlPoints[controlPoints.length - 1].position);
+      var l = geometry.vertices.length - 1;
+      geometry.faces.push(new THREE.Face3(l - 2, l - 1, l));
+      for (var i = 0; i <= l; i++) {
+        geometry.vertices[i].z = -10;
+      }
+    }
+    mesh = new THREE.Mesh(geometry, material);
+    group.add(mesh);
+  } else if (degree == 3) {
+    geometry = new THREE.Geometry();
+    if (controlPoints.length == 4) {
+      for (var i = 0; i < controlPoints.length; i++) {
+        controlPoints[i].position.z = -10;
+        geometry.vertices.push(controlPoints[i].position);
+      }
+      var otoczka = wyznaczOtoczke(geometry.vertices);
+      for (var i = 0; i < otoczka.length; i++) {
+        geometry.vertices[i] = otoczka[i];
+        if (i < otoczka.length - 2)
+          geometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
+      }
+      //rysowanie otoczki
+      mesh = new THREE.Mesh(geometry, material);
+      group.add(mesh);
+    } else if (controlPoints.length > 4) {
+
+      //wyznaczenie wierzcholkow Beziera dla krzywej 3 stopnia
+      temp.subVectors(controlPoints[2].position, controlPoints[1].position);
+      temp.divideScalar(2);
+      processed.push(new THREE.Vector3().addVectors(controlPoints[1].position, temp));
+      for (var i = 2; i < controlPoints.length - 3; i++) {
+        temp.subVectors(controlPoints[i + 1].position, controlPoints[i].position);
+        temp.divideScalar(3);
+        processed.push(new THREE.Vector3().addVectors(controlPoints[i].position, temp));
+        processed.push(new THREE.Vector3().subVectors(controlPoints[i + 1].position, temp));
+      }
+      temp.subVectors(controlPoints[controlPoints.length - 2].position, controlPoints[controlPoints.length - 3].position);
+      temp.divideScalar(2);
+      processed.push(new THREE.Vector3().addVectors(controlPoints[controlPoints.length - 3].position, temp));
+
+      //wyznaczone boki dzielimy na pol
+      for (var i = 0; i < processed.length; i += 2) {
+        temp.subVectors(processed[i + 1], processed[i]);
+        temp.divideScalar(2);
+        processed2.push(new THREE.Vector3().addVectors(processed[i], temp));
+      }
+      //definiowanie geometrii
+      geometry.vertices.push(controlPoints[0].position, controlPoints[1].position);
+      for (var i = 0; i < processed2.length; i++) {
+        geometry.vertices.push(processed[2 * i], processed2[i], processed[2 * i + 1]);
+      }
+      var l = controlPoints.length;
+      geometry.vertices.push(controlPoints[l - 2].position, controlPoints[l - 1].position);
+      l = geometry.vertices.length;
+      for (var i = 0; i < l; i++) {
+        geometry.vertices[i].z = -10;
+        if (i % 3 === 0 && i !== 0) {
+          arr = new THREE.Geometry();
+          arr.vertices.push(geometry.vertices[i - 3], geometry.vertices[i - 2], geometry.vertices[i - 1], geometry.vertices[i]);
+          var otoczka = wyznaczOtoczke(arr.vertices);
+          for (var j = 0; j < otoczka.length; j++) {
+            arr.vertices[j] = otoczka[j];
+            if (j < otoczka.length - 2)
+              arr.faces.push(new THREE.Face3(0, j + 1, j + 2));
+          }
+          //rysowanie otoczki
+          mesh = new THREE.Mesh(arr, material);
+          group.add(mesh);
+        }
+      }
+    }
+  }
 }
 
 function BezierSurface(controlPoints, n, m, weights) {

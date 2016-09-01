@@ -15,6 +15,8 @@
     </li>
     <li style="margin: 10">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li>
+      <input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -27,7 +29,7 @@
     /*jshint globalstrict: true*/
     "use strict";
     var raycaster, scene, camera, renderer, plane;
-    var INTERSECTED, SELECTED, temp;
+    var INTERSECTED, SELECTED, temp, nurbsCurve;
     var points = [];
     var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
@@ -41,6 +43,16 @@
 
     init();
     render();
+
+    function change() {
+      document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
+      if (document.getElementsByName("otoczka").checked) {
+        boehmAlgoritm(points, nurbsCurve, stopien);
+      } else if (scene.getObjectByName("otoczka") !== undefined) {
+        scene.remove(scene.getObjectByName("otoczka"));
+      }
+      render();
+    }
 
     function changeWeight(id) {
       var item = document.getElementById(id);
@@ -130,7 +142,7 @@
         nurbsWezly.push(THREE.Math.clamp(wezel, 0, 1));
       }
 
-      var nurbsCurve = new THREE.NURBSCurve(stopien, nurbsWezly, nurbsPunktyKontrolne);
+      nurbsCurve = new THREE.NURBSCurve(stopien, nurbsWezly, nurbsPunktyKontrolne);
       if (stopien < N) {
         var nurbsGeometry = new THREE.Geometry();
         nurbsGeometry.vertices = nurbsCurve.getPoints(10 * N);
@@ -155,6 +167,7 @@
           var position = nurbsCurve.getPoint(nurbsWezly[i]);
           point.position.x = position.x;
           point.position.y = position.y;
+//          point.position.z = -10;
           punkty.add(point);
         }
       }
@@ -164,6 +177,7 @@
     }
 
     function render() {
+
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
     }
@@ -240,6 +254,8 @@
             var i = points.indexOf(SELECTED);
             nurbsPunktyKontrolne[i].x = SELECTED.position.x;
             nurbsPunktyKontrolne[i].y = SELECTED.position.y;
+            if (document.getElementsByName("otoczka").checked)
+              boehmAlgoritm(points, nurbsCurve, stopien);
             drawNURBS();
           }
           return;
