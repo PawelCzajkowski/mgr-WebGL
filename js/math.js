@@ -10,6 +10,12 @@ var trojkatPascala = [
   [1, 3, 3, 1]
 ];
 
+var material = new THREE.MeshBasicMaterial({
+  color: "#c5ebfb",
+  side: THREE.DoubleSide,
+  transparent: true,
+});
+
 function dwumian(n, k) {
   var s, wiersz;
   while (n >= trojkatPascala.length) {
@@ -148,9 +154,39 @@ function rysujOtoczke(points) {
     side: THREE.DoubleSide,
     transparent: true,
   });
-  var oMesh = new THREE.Mesh(oGeometry, oMaterial);
+  var oMesh = new THREE.Mesh(oGeometry, material);
   oMesh.name = "otoczka";
   scene.add(oMesh);
+}
+
+//funkcja wykorzystywana w aplecie 8.39
+function wyswietlOtoczke(controlPoints, degree) {
+  try {
+    scene.remove(scene.getObjectByName('otoczka'));
+    group = [];
+  } catch (e) {
+    console.log(e.message);
+  }
+  var mesh;
+  var group = new THREE.Group();
+  group.name = "otoczka";
+  scene.add(group);
+  for (var i = 0; i < controlPoints.length - degree; i++) {
+    otoczkaGeometry = new THREE.Geometry();
+    for (var j = 0; j < degree + 1; j++) {
+      controlPoints[i + j].position.z = -10;
+      otoczkaGeometry.vertices.push(controlPoints[i + j].position);
+    }
+    var otoczka = wyznaczOtoczke(otoczkaGeometry.vertices);
+    for (var k = 0; k < otoczka.length; k++) {
+      otoczkaGeometry.vertices[k] = otoczka[k];
+      if (k < otoczka.length - 2)
+        otoczkaGeometry.faces.push(new THREE.Face3(0, k + 1, k + 2));
+    }
+    //rysowanie otoczki
+    mesh = new THREE.Mesh(otoczkaGeometry, material);
+    group.add(mesh);
+  }
 }
 
 //algorytm Boehma do wyznaczania otoczki wypuklej

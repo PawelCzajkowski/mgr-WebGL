@@ -16,7 +16,9 @@
     <li style="margin: 10">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
-      <input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
+      <input type="checkbox" id="otoczka" onclick="change()">Otoczka</li>
+    <li>
+      <input type="checkbox" id="boehm" onclick="change()">Boehm</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -29,7 +31,7 @@
     /*jshint globalstrict: true*/
     "use strict";
     var raycaster, scene, camera, renderer, plane;
-    var INTERSECTED, SELECTED, temp, nurbsCurve;
+    var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry;
     var points = [];
     var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
@@ -45,8 +47,9 @@
     render();
 
     function change() {
-      document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
-      if (document.getElementsByName("otoczka").checked) {
+      if (document.getElementById("otoczka").checked) {
+        wyswietlOtoczke(points, stopien);
+      } else if (document.getElementById("boehm").checked) {
         boehmAlgoritm(points, nurbsCurve, stopien);
       } else if (scene.getObjectByName("otoczka") !== undefined) {
         scene.remove(scene.getObjectByName("otoczka"));
@@ -64,6 +67,14 @@
     function changeDegree(val) {
       stopien = Number(val);
       if (val == 1) stopien = Number(0);
+
+      if (stopien != 2 && stopien != 3) {
+        document.getElementById("boehm").checked = false;
+        document.getElementById("boehm").disabled = true;
+        scene.remove(scene.getObjectByName("otoczka"));
+      } else {
+        document.getElementById("boehm").disabled = false;
+      }
       drawNURBS();
     }
 
@@ -167,9 +178,13 @@
           var position = nurbsCurve.getPoint(nurbsWezly[i]);
           point.position.x = position.x;
           point.position.y = position.y;
-//          point.position.z = -10;
           punkty.add(point);
         }
+      }
+      if (document.getElementById("otoczka").checked) {
+        wyswietlOtoczke(points, stopien);
+      } else if (document.getElementById("boehm").checked) {
+        boehmAlgoritm(points, nurbsCurve, stopien);
       }
       //rysuj linie
       drawLines();
@@ -254,8 +269,11 @@
             var i = points.indexOf(SELECTED);
             nurbsPunktyKontrolne[i].x = SELECTED.position.x;
             nurbsPunktyKontrolne[i].y = SELECTED.position.y;
-            if (document.getElementsByName("otoczka").checked)
+            if (document.getElementById("otoczka").checked) {
+              wyswietlOtoczke(points, stopien);
+            } else if (document.getElementById("boehm").checked) {
               boehmAlgoritm(points, nurbsCurve, stopien);
+            }
             drawNURBS();
           }
           return;
