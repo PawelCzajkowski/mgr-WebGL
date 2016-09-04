@@ -10,6 +10,10 @@
 <body>
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
+    <li style="padding: 8px">Ilość segmentów u: <span id="u">1</span><br>
+      <input type="range" id="uSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
+    <li style="padding: 8px">Ilość segmentów v: <span id="v">1</span><br>
+      <input type="range" id="vSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
     <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj powierzchnię</li>
     <li style="maring-top: 0px">
@@ -54,6 +58,13 @@
 
     init();
     render();
+
+    function setSegments() {
+      document.getElementById("u").innerHTML = document.getElementById("uSegments").value;
+      document.getElementById("v").innerHTML = document.getElementById("vSegments").value;
+      recalculate();
+      render();
+    }
 
     function show_div() {
       document.getElementById('popup').style.visibility = "visible";
@@ -171,7 +182,7 @@
       if (document.getElementById("grid").checked) {
         scene.remove(scene.getObjectByName("linie"));
         scene.remove(scene.getObjectByName("punkty"));
-      } else {
+      } else if (groupLines && groupPoints) {
         scene.add(groupLines);
         scene.add(groupPoints);
       }
@@ -236,6 +247,9 @@
     function resetScene() {
       try {
         scene.children = [];
+        controlPoints = [];
+        groupLines = false;
+        groupPoints = false;
         scene.add(plane);
         controls.reset();
         renderer.clear();
