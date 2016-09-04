@@ -83,11 +83,7 @@
 
     function drawCurvature(Curve) {
       var cGeometry = new THREE.Geometry();
-      var ctrlPoints = [];
-      for (var i = 0; i < points.length; i++) {
-        ctrlPoints.push(points[i].position);
-      }
-      cGeometry = wyznaczKrzywizne(Curve, ctrlPoints, 15 * points.length, points.length - 1);
+      cGeometry = wyznaczKrzywizne(Curve, copyPoints(points), 15 * points.length, points.length - 1);
       var cMaterial = new THREE.LineBasicMaterial({
         color: "blue"
       });
