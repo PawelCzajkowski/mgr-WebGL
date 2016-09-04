@@ -346,7 +346,8 @@ function BezierSurface(controlPoints, n, m, weights) {
 
   this.controlPoints = controlPoints;
   this.weights = weights;
-  var segments = 3;
+  var uSegments = Number(document.getElementById("uSegments").value);
+  var vSegments = Number(document.getElementById("vSegments").value);
   var verts = this.vertices;
   var faces = this.faces;
 
@@ -354,18 +355,18 @@ function BezierSurface(controlPoints, n, m, weights) {
   createFaces();
 
   function createVertices() {
-    for (var v = 0; v / (m * segments) <= 1; v++) {
-      for (var u = 0; u / (n * segments) <= 1; u++) {
+    for (var v = 0; v / (m * vSegments) <= 1; v++) {
+      for (var u = 0; u / (n * uSegments) <= 1; u++) {
         //tutaj wyznaczenie punktow dla u i v
         //czyli wywoalnie funkcji P(u,v)
-        verts.push(bezier(u / (n * segments), v / (m * segments), n, m));
+        verts.push(bezier(u / (n * uSegments), v / (m * vSegments), n, m));
       }
     }
   }
 
   function createFaces() {
-    var N = n * segments + 1,
-      M = m * segments + 1;
+    var N = n * uSegments + 1,
+      M = m * vSegments + 1;
     for (var i = 0; i < M - 1; i++) {
       for (var j = 0; j < N - 1; j++) {
         var a = i * N + j;
