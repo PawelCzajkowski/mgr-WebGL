@@ -31,7 +31,7 @@
     var INTERSECTED, SELECTED;
     var points = [],
       controlPoints = [];
-    var geometries = [];
+    var geometry, geometries = [];
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
@@ -43,8 +43,8 @@
       document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
       if (document.getElementsByName("krzywizna").checked) {
         drawBezier(geometries);
-      } else if (scene.getObjectByName("krzywizna") !== undefined) {
-        scene.remove(scene.getObjectByName("krzywizna"));
+      } else {
+        GoC.children = [];
       }
       render();
     }
@@ -56,7 +56,6 @@
         color: "blue"
       });
       var cLines = new THREE.LineSegments(cGeometry, cMaterial);
-      cLines.name = "krzywizna";
       GoC.add(cLines);
     }
 
@@ -152,6 +151,7 @@
         line.name = "lines";
         scene.add(line);
       }
+      render();
     }
 
     function addPoint(Px, Py) {
@@ -168,7 +168,7 @@
       points.push(point);
 
       if (points.length == 2) {
-        var geometry = new THREE.Geometry();
+        geometry = new THREE.Geometry();
         geometry.vertices.push(points[0].position);
         geometry.vertices.push(points[1].position);
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
@@ -200,7 +200,7 @@
           controlPoints.push(point);
           GoP.add(point);
 
-          var geometry = new THREE.Geometry();
+          geometry = new THREE.Geometry();
           geometry.vertices.push(points[0].position);
           geometry.vertices.push(controlPoints[0].position);
           geometry.vertices.push(controlPoints[1].position);
@@ -229,7 +229,7 @@
         controlPoints.push(point);
         GoP.add(point);
 
-        var geometry = new THREE.Geometry();
+        geometry = new THREE.Geometry();
         geometry.vertices.push(points[i - 1].position);
         geometry.vertices.push(controlPoints[controlPoints.length - 2].position);
         geometry.vertices.push(controlPoints[controlPoints.length - 1].position);
@@ -301,7 +301,6 @@
 
     function resetScene() {
       try {
-        scene.remove(scene.getObjectByName("krzywizna"));
         GoB.children = [];
         GoP.children = [];
         scene.children = [];
