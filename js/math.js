@@ -47,43 +47,69 @@ function wyznaczPunkty(inArray, u) {
   return temp[temp.length - 1];
 }
 
+//wymierny algorytm de Casteljau
+function wymiernyDeCasteljau(punkty, u, wagi) {
+  var W = [],
+    tempW = [];
+  var P = [],
+    tempP = [];
+  var w, s, p, temp1, temp2;
+
+  for (var i = 0; i < punkty.length; i++) {
+    tempP.push(punkty[i].clone());
+    if (wagi === undefined) {
+      tempW.push(1);
+    } else {
+      tempW.push(wagi[i]);
+    }
+  }
+  P.push(tempP);
+  W.push(tempW);
+
+  //wyznaczenie punktow posrednich
+  var n = punkty.length - 1;
+  for (var j = 1; j <= n; j++) {
+    tempP = [];
+    tempW = [];
+    for (var i = 0; i <= n - j; i++) {
+      w = (1 - u) * W[j - 1][i] + u * W[j - 1][i + 1];
+      s = u * W[j - 1][i + 1] / w;
+      temp1 = P[j - 1][i + 1].clone();
+      temp1.multiplyScalar(s);
+      s = (1 - u) * W[j - 1][i] / w;
+      temp2 = P[j - 1][i].clone();
+      temp2.multiplyScalar(s);
+      p = new THREE.Vector3().addVectors(temp1, temp2);
+      tempP.push(p);
+      tempW.push(w);
+    }
+    P.push(tempP);
+    W.push(tempW);
+  }
+  return P;
+}
+
 // Wyznaczenie krzywizny na podstawie algorytmu de Casteljau
 function wyznaczKrzywizne(curve, ctrlPoint, count, deg) {
   var rGeometry = new THREE.Geometry();
   for (var i = 0; i <= count; i++) {
     var u = i / count;
-    var Vx = [],
-      Vy = [],
-      temp = [];
-    if (deg === 2) {
-      for (var j = 0; j < ctrlPoint.length; j++) {
-        Vx[j] = ctrlPoint[j].x;
-        Vy[j] = ctrlPoint[j].y;
-      }
+
+    //dla krzywych wymiernych
+    if (geometry.type === "Geometry" || geometry.getAttribute("weight") === undefined) {
+      var V = wymiernyDeCasteljau(ctrlPoint, u);
     } else {
-      temp = wyznaczPunkty(ctrlPoint, u);
-      for (var k = 0; k < temp.length; k++) {
-        Vx[k] = temp[k].x;
-        Vy[k] = temp[k].y;
-      }
+      var V = wymiernyDeCasteljau(ctrlPoint, u, geometry.attributes.weight.array);
     }
-
-    var vecA = new THREE.Vector3(Vx[1] - Vx[0], Vy[1] - Vy[0]);
-    var vecB = new THREE.Vector3(Vx[2] - Vx[1], Vy[2] - Vy[1]);
-
-    Vx.push(Vx[0] + vecA.x * u);
-    Vx.push(Vx[1] + vecB.x * u);
-    Vy.push(Vy[0] + vecA.y * u);
-    Vy.push(Vy[1] + vecB.y * u);
-
-    var vecC = new THREE.Vector3(Vx[Vx.length - 1] - Vx[Vx.length - 2], Vy[Vy.length - 1] - Vy[Vy.length - 2]);
+    var vecA = new THREE.Vector3().subVectors(V[deg - 2][1], V[deg - 2][0]);
+    var vecB = new THREE.Vector3().subVectors(V[deg - 2][2], V[deg - 2][1]);
+    var vecC = new THREE.Vector3().subVectors(V[deg - 1][1], V[deg - 1][0]);
     var vecD = new THREE.Vector3().subVectors(vecB, vecA);
 
     var p1 = new THREE.Vector3(deg * vecC.x, deg * vecC.y);
     var p2 = new THREE.Vector3(deg * (deg - 1) * vecD.x, deg * (deg - 1) * vecD.y);
 
     var curv = (p1.x * p2.y - p1.y * p2.x) / Math.sqrt(Math.pow(p1.length(), 3));
-    console.log("u: " + u + " k: " + curv);
 
     var temp = curve.getPoint(u);
     rGeometry.vertices.push(new THREE.Vector3(temp.x, temp.y));
