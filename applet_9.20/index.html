@@ -5,16 +5,22 @@
   <meta charset="UTF-8">
   <title>Applet 9.20</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
+  <style>
+    #waga_span {
+      display: block;
+      margin: 8px;
+    }
+  </style>
 </head>
 
 <body>
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
     <li>Stopień U:
-      <input id='uDeg' type="number" size="3" min="2" value="2" onchange="change()">
+      <input id='uDeg' type="number" size="3" min="1" value="1" onchange="change()">
     </li>
     <li>Stopień V:
-      <input id='vDeg' type="number" size="3" min="2" value="2" onchange="change()">
+      <input id='vDeg' type="number" size="3" min="1" value="1" onchange="change()">
     </li>
     <li style="padding: 8px">Ilość segmentów u: <span id="u">1</span><br>
       <input type="range" id="uSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
@@ -52,10 +58,10 @@
   <div id="waga" oncontextmenu="return false;">
     <div id="form">
       <form>
-        Waga punktu:
-        <input id="weight" type="number" min="1" max="10" step="0.1" value="5" size="3">
+        Waga punktu: <span id="waga_span">5</span>
+        <input id="weight" type="range" min="0.1" max="10" step="0.1" value="5" onmousemove="setWeight()">
         <br>
-        <button type="button" onclick="setWeight()">OK</button>
+        <button type="button" onclick="hide_waga()">OK</button>
       </form>
     </div>
   </div>
@@ -165,9 +171,14 @@
       document.getElementById("waga").style.visibility = "visible";
     }
 
-    function setWeight() {
+    function hide_waga() {
       document.getElementById("waga").style.visibility = "hidden";
-      sprites[id].position.w = Number(document.getElementById("weight").value);
+    }
+
+    function setWeight() {
+      var w = document.getElementById("weight").value;
+      sprites[id].position.w = Number(w);
+      document.getElementById("waga_span").innerHTML = w;
       recalculate();
     }
 
