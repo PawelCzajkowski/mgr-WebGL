@@ -17,6 +17,8 @@
       <input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
     <li>
       <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+    <li>
+      <input type="checkbox" id="wielobok" onclick="hide()">Ukryj wielobok</li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -28,7 +30,8 @@
     "use strict";
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp;
-    var points = [];
+    var points = [],
+      GoL;
     var geometry, positions, lines, bezier, Cgeometry;
     var isWebGL;
 
@@ -51,6 +54,12 @@
       } else if (scene.getObjectByName("krzywizna") !== undefined) {
         scene.remove(scene.getObjectByName("krzywizna"));
       }
+      render();
+    }
+
+    function hide() {
+      document.getElementById("wielobok").checked =
+        (document.getElementById("wielobok").checked ? true : false);
       render();
     }
 
@@ -107,15 +116,14 @@
       geometry.attributes.position.needsUpdate = true;
       if (isWebGL) {
         geometry.setDrawRange(0, ++drawCount);
-        scene.add(lines);
+        GoL.add(lines);
       } else {
         scene.remove(scene.getObjectByName("Linia"));
         lines.vertices.push(new THREE.Vector3(vertex[drawCount * 3], vertex[drawCount * 3 + 1], 0));
         var line = new THREE.Line(lines, new THREE.LineBasicMaterial({
           color: "black"
         }));
-        line.name = "Linia";
-        scene.add(line);
+        GoL.add(line);
         ++drawCount;
       }
       if (drawCount >= 2) {
@@ -133,6 +141,11 @@
         rysujOtoczke(copyPoints(points));
       } else if (scene.getObjectByName("otoczka") !== undefined) {
         scene.remove(scene.getObjectByName("otoczka"));
+      }
+      if (document.getElementById("wielobok").checked) {
+        scene.remove(scene.getObjectByName("Linia"));
+      } else {
+        scene.add(GoL);
       }
       camera.lookAt(scene.position);
       renderer.render(scene, camera);
@@ -168,6 +181,9 @@
       var container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
+      GoL = new THREE.Group();
+      GoL.name = "Linia";
+      scene.add(GoL);
       camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
       camera.position.z = 100;
 
