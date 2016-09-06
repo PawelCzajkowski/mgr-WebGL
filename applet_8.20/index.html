@@ -16,6 +16,7 @@
       <input type="checkbox" name="otoczka" onclick="change()">Otoczka</li>
     <li>
       <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+    <li><a href="#" onclick="resetWeights()">Równaj wagi</a></li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -40,6 +41,17 @@
 
     function change() {
       document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
+      render();
+    }
+
+    function resetWeights() {
+      for (var i = 0; i < idx / 3; i++) {
+        geometry.attributes.weight.array[i] = 5;
+        document.getElementById(i + "text").innerHTML = 5;
+        document.getElementById(i).value = 5;
+      }
+      scene.remove(scene.getObjectByName('Bezier'));
+      drawBezier(drawCount - 1, geometry.attributes);
       render();
     }
 
@@ -128,7 +140,7 @@
       item2.setAttribute("onchange", 'changeWeight(this.id)');
       item.appendChild(item2);
       item.setAttribute("align", "center");
-      list.insertBefore(item, list.childNodes[list.childNodes.length - 9]);
+      list.insertBefore(item, list.childNodes[list.childNodes.length - 3 * 3 - 1]);
       geometry.attributes.weight.array[idx / 3] = 5;
 
       var vertex = geometry.attributes.position.array;

@@ -19,6 +19,7 @@
       <input type="checkbox" id="otoczka" onclick="change()">Otoczka</li>
     <li>
       <input type="checkbox" id="boehm" onclick="change()">Boehm</li>
+    <li><a href="#" onclick="resetWeights()">Równaj wagi</a></li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -55,6 +56,15 @@
         scene.remove(scene.getObjectByName("otoczka"));
       }
       render();
+    }
+
+    function resetWeights() {
+      for (var i = 0; i < idx; i++) {
+        nurbsPunktyKontrolne[i].w = 5;
+        document.getElementById(i + "text").innerHTML = 5;
+        document.getElementById(i).value = 5;
+      }
+      drawNURBS();
     }
 
     function changeWeight(id) {
@@ -113,7 +123,7 @@
       item2.setAttribute("id", idx);
       item2.setAttribute("onchange", 'changeWeight(this.id)');
       item.appendChild(item2);
-      list.insertBefore(item, list.childNodes[list.childNodes.length - 4]);
+      list.insertBefore(item, list.childNodes[list.childNodes.length - 3 * 3 - 1]);
       idx++;
 
       nurbsPunktyKontrolne.push(new THREE.Vector4(Px, Py, 0, 5));
