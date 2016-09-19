@@ -33,7 +33,8 @@
     "use strict";
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry;
-    var points = [];
+    var points = [],
+      nurbsWezly = [];
     var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
     var isClosed = false;
@@ -51,7 +52,7 @@
       if (document.getElementById("otoczka").checked) {
         wyswietlOtoczke(points, stopien);
       } else if (document.getElementById("boehm").checked) {
-        boehmAlgoritm(points, nurbsCurve, stopien);
+        boehmAlgoritm(nurbsCurve);
       } else if (scene.getObjectByName("otoczka") !== undefined) {
         scene.remove(scene.getObjectByName("otoczka"));
       }
@@ -153,7 +154,7 @@
         console.error(e.message);
       }
 
-      var nurbsWezly = [];
+      nurbsWezly = [];
       var N = nurbsPunktyKontrolne.length
       for (var i = 0; i <= stopien; i++) {
         nurbsWezly.push(0);
@@ -194,7 +195,7 @@
       if (document.getElementById("otoczka").checked) {
         wyswietlOtoczke(points, stopien);
       } else if (document.getElementById("boehm").checked) {
-        boehmAlgoritm(points, nurbsCurve, stopien);
+        boehmAlgoritm(nurbsCurve);
       }
       //rysuj linie
       drawLines();
@@ -282,7 +283,7 @@
             if (document.getElementById("otoczka").checked) {
               wyswietlOtoczke(points, stopien);
             } else if (document.getElementById("boehm").checked) {
-              boehmAlgoritm(points, nurbsCurve, stopien);
+              boehmAlgoritm(nurbsCurve);
             }
             drawNURBS();
           }

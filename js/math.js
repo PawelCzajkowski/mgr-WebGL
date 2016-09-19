@@ -216,7 +216,7 @@ function wyswietlOtoczke(controlPoints, degree) {
 }
 
 //algorytm Boehma do wyznaczania otoczki wypuklej
-function boehmAlgoritm(controlPoints, nurbs, degree) {
+function boehmAlgoritm(nurbs) {
   try {
     scene.remove(scene.getObjectByName('otoczka'));
     group = [];
@@ -227,6 +227,8 @@ function boehmAlgoritm(controlPoints, nurbs, degree) {
   var geometry, mesh, arr;
   var processed = [],
     processed2 = [];
+  var d = [];
+  var A, B, C, D;
   var temp = new THREE.Vector3();
   var group = new THREE.Group();
   group.name = "otoczka";
@@ -237,29 +239,29 @@ function boehmAlgoritm(controlPoints, nurbs, degree) {
     side: THREE.DoubleSide,
     transparent: true,
   });
-  if (degree == 2) {
+  if (nurbs.degree == 2) {
     geometry = new THREE.Geometry();
-    if (controlPoints.length == 3) {
+    if (nurbs.controlPoints.length == 3) {
       for (var i = 0; i < 3; i++) {
-        controlPoints[i].position.z = -10;
-        geometry.vertices.push(controlPoints[i].position);
+        nurbs.controlPoints[i].z = -10;
+        geometry.vertices.push(nurbs.controlPoints[i]);
       }
       geometry.faces.push(new THREE.Face3(0, 1, 2));
-    } else if (controlPoints.length > 3) {
+    } else if (nurbs.controlPoints.length > 3) {
       //wyznaczenie wierzcholkow Beziera
-      for (var i = 1; i <= controlPoints.length - 3; i++) {
-        temp.subVectors(controlPoints[i + 1].position, controlPoints[i].position);
+      for (var i = 1; i <= nurbs.controlPoints.length - 3; i++) {
+        temp.subVectors(nurbs.controlPoints[i + 1], nurbs.controlPoints[i]);
         temp.divideScalar(2);
-        processed.push(new THREE.Vector3().addVectors(controlPoints[i].position, temp));
+        processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[i], temp));
       }
 
       //definiowanie geometrii
-      geometry.vertices.push(controlPoints[0].position, controlPoints[1].position);
+      geometry.vertices.push(nurbs.controlPoints[0], nurbs.controlPoints[1]);
       for (var i = 0; i < processed.length; i++) {
-        geometry.vertices.push(processed[i], controlPoints[i + 2].position);
+        geometry.vertices.push(processed[i], nurbs.controlPoints[i + 2]);
         geometry.faces.push(new THREE.Face3(2 * i, 2 * i + 1, 2 * i + 2));
       }
-      geometry.vertices.push(controlPoints[controlPoints.length - 1].position);
+      geometry.vertices.push(nurbs.controlPoints[nurbs.controlPoints.length - 1]);
       var l = geometry.vertices.length - 1;
       geometry.faces.push(new THREE.Face3(l - 2, l - 1, l));
       for (var i = 0; i <= l; i++) {
@@ -268,12 +270,12 @@ function boehmAlgoritm(controlPoints, nurbs, degree) {
     }
     mesh = new THREE.Mesh(geometry, material);
     group.add(mesh);
-  } else if (degree == 3) {
+  } else if (nurbs.degree == 3) {
     geometry = new THREE.Geometry();
-    if (controlPoints.length == 4) {
-      for (var i = 0; i < controlPoints.length; i++) {
-        controlPoints[i].position.z = -10;
-        geometry.vertices.push(controlPoints[i].position);
+    if (nurbs.controlPoints.length == 4) {
+      for (var i = 0; i < nurbs.controlPoints.length; i++) {
+        nurbs.controlPoints[i].z = -10;
+        geometry.vertices.push(nurbs.controlPoints[i]);
       }
       var otoczka = wyznaczOtoczke(geometry.vertices);
       for (var i = 0; i < otoczka.length; i++) {
@@ -284,35 +286,56 @@ function boehmAlgoritm(controlPoints, nurbs, degree) {
       //rysowanie otoczki
       mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
-    } else if (controlPoints.length > 4) {
-
-      //wyznaczenie wierzcholkow Beziera dla krzywej 3 stopnia
-      temp.subVectors(controlPoints[2].position, controlPoints[1].position);
-      temp.divideScalar(2);
-      processed.push(new THREE.Vector3().addVectors(controlPoints[1].position, temp));
-      for (var i = 2; i < controlPoints.length - 3; i++) {
-        temp.subVectors(controlPoints[i + 1].position, controlPoints[i].position);
-        temp.divideScalar(3);
-        processed.push(new THREE.Vector3().addVectors(controlPoints[i].position, temp));
-        processed.push(new THREE.Vector3().subVectors(controlPoints[i + 1].position, temp));
+    } else if (nurbs.controlPoints.length > 4) {
+      if (nurbs.knots !== undefined || nurbs.knots.length > 0) {
+        for (var i = 0; i < nurbs.knots.length - 1; i++) {
+          d.push(nurbs.knots[i + 1] - nurbs.knots[i]);
+        }
+        for (var i = 1; i < nurbs.controlPoints.length - 2; i++) {
+          A = nurbs.controlPoints[i], B = nurbs.controlPoints[i + 1];
+          C = new THREE.Vector4(), D = new THREE.Vector4();
+          C.w = (A.w * (d[i + 2] + d[i + 3]) + B.w * d[i + 1]) / (d[i + 1] + d[i + 2] + d[i + 3]);
+          D.w = (A.w * d[i + 3] + B.w * (d[i + 1] + d[i + 2])) / (d[i + 1] + d[i + 2] + d[i + 3]);
+          C.x = (A.x * A.w * (d[i + 2] + d[i + 3]) + B.x * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+          C.y = (A.y * A.w * (d[i + 2] + d[i + 3]) + B.y * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+          D.x = (A.x * A.w * d[i + 3] + B.x * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+          D.y = (A.y * A.w * d[i + 3] + B.y * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+          processed.push(C);
+          processed.push(D);
+        }
+      } else {
+        //wyznaczenie wierzcholkow Beziera dla krzywej 3 stopnia
+        temp.subVectors(nurbs.controlPoints[2], nurbs.controlPoints[1]);
+        temp.divideScalar(2);
+        processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[1], temp));
+        for (var i = 2; i < nurbs.controlPoints.length - 3; i++) {
+          temp.subVectors(nurbs.controlPoints[i + 1], nurbs.controlPoints[i]);
+          temp.divideScalar(3);
+          processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[i], temp));
+          processed.push(new THREE.Vector3().subVectors(nurbs.controlPoints[i + 1], temp));
+        }
+        temp.subVectors(nurbs.controlPoints[nurbs.controlPoints.length - 2], nurbs.controlPoints[nurbs.controlPoints.length - 3]);
+        temp.divideScalar(2);
+        processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[nurbs.controlPoints.length - 3], temp));
       }
-      temp.subVectors(controlPoints[controlPoints.length - 2].position, controlPoints[controlPoints.length - 3].position);
-      temp.divideScalar(2);
-      processed.push(new THREE.Vector3().addVectors(controlPoints[controlPoints.length - 3].position, temp));
 
       //wyznaczone boki dzielimy na pol
-      for (var i = 0; i < processed.length; i += 2) {
-        temp.subVectors(processed[i + 1], processed[i]);
-        temp.divideScalar(2);
-        processed2.push(new THREE.Vector3().addVectors(processed[i], temp));
+      for (var i = 0; i < processed.length / 2 - 1; i++) {
+        A = processed[2 * i + 1], B = processed[2 * (i + 1)];
+        C = new THREE.Vector4();
+        C.w = (A.w * (d[i + 4]) + B.w * d[i + 3]) / (d[i + 3] + d[i + 4]);
+        C.x = (A.x * A.w * (d[i + 4]) + B.x * B.w * d[i + 3]) / (C.w * (d[i + 3] + d[i + 4]));
+        C.y = (A.y * A.w * (d[i + 4]) + B.y * B.w * d[i + 3]) / (C.w * (d[i + 3] + d[i + 4]));
+        processed2.push(C);
       }
+
       //definiowanie geometrii
-      geometry.vertices.push(controlPoints[0].position, controlPoints[1].position);
+      geometry.vertices.push(nurbs.controlPoints[0], nurbs.controlPoints[1]);
       for (var i = 0; i < processed2.length; i++) {
-        geometry.vertices.push(processed[2 * i], processed2[i], processed[2 * i + 1]);
+        geometry.vertices.push(processed[2 * i + 1], processed2[i], processed[2 * i + 2]);
       }
-      var l = controlPoints.length;
-      geometry.vertices.push(controlPoints[l - 2].position, controlPoints[l - 1].position);
+      var l = nurbs.controlPoints.length;
+      geometry.vertices.push(nurbs.controlPoints[l - 2], nurbs.controlPoints[l - 1]);
       l = geometry.vertices.length;
       for (var i = 0; i < l; i++) {
         geometry.vertices[i].z = -10;
