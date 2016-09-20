@@ -234,6 +234,11 @@ function boehmAlgoritm(nurbs) {
   group.name = "otoczka";
   scene.add(group);
 
+  if (nurbs.knots !== undefined || nurbs.knots.length > 0) {
+    for (var i = 0; i < nurbs.knots.length - 1; i++) {
+      d.push(nurbs.knots[i + 1] - nurbs.knots[i]);
+    }
+  }
   var material = new THREE.MeshBasicMaterial({
     color: "#c5ebfb",
     side: THREE.DoubleSide,
@@ -250,9 +255,12 @@ function boehmAlgoritm(nurbs) {
     } else if (nurbs.controlPoints.length > 3) {
       //wyznaczenie wierzcholkow Beziera
       for (var i = 1; i <= nurbs.controlPoints.length - 3; i++) {
-        temp.subVectors(nurbs.controlPoints[i + 1], nurbs.controlPoints[i]);
-        temp.divideScalar(2);
-        processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[i], temp));
+        A = nurbs.controlPoints[i + 1], B = nurbs.controlPoints[i];
+        C = new THREE.Vector4();
+        C.w = (A.w * d[i + 2] + B.w * d[i + 1]) / (d[i + 1] + d[i + 2]);
+        C.x = (A.x * A.w * d[i + 2] + B.x * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2]));
+        C.y = (A.y * A.w * d[i + 2] + B.y * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2]));
+        processed.push(C);
       }
 
       //definiowanie geometrii
@@ -283,40 +291,22 @@ function boehmAlgoritm(nurbs) {
         if (i < otoczka.length - 2)
           geometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
       }
+
       //rysowanie otoczki
       mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
     } else if (nurbs.controlPoints.length > 4) {
-      if (nurbs.knots !== undefined || nurbs.knots.length > 0) {
-        for (var i = 0; i < nurbs.knots.length - 1; i++) {
-          d.push(nurbs.knots[i + 1] - nurbs.knots[i]);
-        }
-        for (var i = 1; i < nurbs.controlPoints.length - 2; i++) {
-          A = nurbs.controlPoints[i], B = nurbs.controlPoints[i + 1];
-          C = new THREE.Vector4(), D = new THREE.Vector4();
-          C.w = (A.w * (d[i + 2] + d[i + 3]) + B.w * d[i + 1]) / (d[i + 1] + d[i + 2] + d[i + 3]);
-          D.w = (A.w * d[i + 3] + B.w * (d[i + 1] + d[i + 2])) / (d[i + 1] + d[i + 2] + d[i + 3]);
-          C.x = (A.x * A.w * (d[i + 2] + d[i + 3]) + B.x * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2] + d[i + 3]));
-          C.y = (A.y * A.w * (d[i + 2] + d[i + 3]) + B.y * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2] + d[i + 3]));
-          D.x = (A.x * A.w * d[i + 3] + B.x * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
-          D.y = (A.y * A.w * d[i + 3] + B.y * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
-          processed.push(C);
-          processed.push(D);
-        }
-      } else {
-        //wyznaczenie wierzcholkow Beziera dla krzywej 3 stopnia
-        temp.subVectors(nurbs.controlPoints[2], nurbs.controlPoints[1]);
-        temp.divideScalar(2);
-        processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[1], temp));
-        for (var i = 2; i < nurbs.controlPoints.length - 3; i++) {
-          temp.subVectors(nurbs.controlPoints[i + 1], nurbs.controlPoints[i]);
-          temp.divideScalar(3);
-          processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[i], temp));
-          processed.push(new THREE.Vector3().subVectors(nurbs.controlPoints[i + 1], temp));
-        }
-        temp.subVectors(nurbs.controlPoints[nurbs.controlPoints.length - 2], nurbs.controlPoints[nurbs.controlPoints.length - 3]);
-        temp.divideScalar(2);
-        processed.push(new THREE.Vector3().addVectors(nurbs.controlPoints[nurbs.controlPoints.length - 3], temp));
+      for (var i = 1; i < nurbs.controlPoints.length - 2; i++) {
+        A = nurbs.controlPoints[i], B = nurbs.controlPoints[i + 1];
+        C = new THREE.Vector4(), D = new THREE.Vector4();
+        C.w = (A.w * (d[i + 2] + d[i + 3]) + B.w * d[i + 1]) / (d[i + 1] + d[i + 2] + d[i + 3]);
+        D.w = (A.w * d[i + 3] + B.w * (d[i + 1] + d[i + 2])) / (d[i + 1] + d[i + 2] + d[i + 3]);
+        C.x = (A.x * A.w * (d[i + 2] + d[i + 3]) + B.x * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+        C.y = (A.y * A.w * (d[i + 2] + d[i + 3]) + B.y * B.w * d[i + 1]) / (C.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+        D.x = (A.x * A.w * d[i + 3] + B.x * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+        D.y = (A.y * A.w * d[i + 3] + B.y * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
+        processed.push(C);
+        processed.push(D);
       }
 
       //wyznaczone boki dzielimy na pol
