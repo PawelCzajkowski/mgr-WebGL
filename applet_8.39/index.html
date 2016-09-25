@@ -22,6 +22,7 @@
     <li><a href="#" onclick="resetWeights()">Równaj wagi</a></li>
     <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
+
   <script src="../js/three.min.js"></script>
   <script src="../js/math.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
@@ -50,7 +51,7 @@
 
     function change() {
       if (document.getElementById("otoczka").checked) {
-        wyswietlOtoczke(points, stopien);
+        rysujOtoczke(copyPoints(points));
       } else if (document.getElementById("boehm").checked) {
         boehmAlgoritm(nurbsCurve);
       } else if (scene.getObjectByName("otoczka") !== undefined) {
@@ -193,7 +194,7 @@
         }
       }
       if (document.getElementById("otoczka").checked) {
-        wyswietlOtoczke(points, stopien);
+        rysujOtoczke(copyPoints(points));
       } else if (document.getElementById("boehm").checked) {
         boehmAlgoritm(nurbsCurve);
       }
@@ -281,7 +282,7 @@
             nurbsPunktyKontrolne[i].x = SELECTED.position.x;
             nurbsPunktyKontrolne[i].y = SELECTED.position.y;
             if (document.getElementById("otoczka").checked) {
-              wyswietlOtoczke(points, stopien);
+              rysujOtoczke(copyPoints(points));
             } else if (document.getElementById("boehm").checked) {
               boehmAlgoritm(nurbsCurve);
             }
