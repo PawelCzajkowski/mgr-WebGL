@@ -15,7 +15,7 @@
     <li>
       <input type="radio" name="stopien" value="3" onclick="setDeg(this.value)">3</li>
     <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
-    <li><a href="#" style="margin-top: 5px" onclick="algorytm_dC( geometry.vertices, GUI);">Dalej</a></li>
+    <li><a id="dalej" href="#" style="margin-top: 5px" onclick="algorytm_dC( geometry.vertices, GUI);">Dalej</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
@@ -23,6 +23,8 @@
   <script>
     var raycaster, scene, camera, renderer, plane;
     var INTERSECTED, SELECTED;
+    var move = false,
+      degree;
     var points = [];
     var geometry = new THREE.Geometry();
     var Cmaterial = new THREE.LineBasicMaterial({
@@ -31,6 +33,7 @@
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
+    var group = new THREE.Group();
 
     var GUI = {
       stopien: 2
@@ -38,11 +41,33 @@
 
     function setDeg(val) {
       GUI.stopien = val;
+      degree = val;
       resetScene();
     }
 
     init();
     render();
+
+    function draw_deCasteljau() {
+      try {
+        group.children = [];
+      } catch (e) {
+        console.error(e.message)
+      };
+      if (Number(GUI.stopien) + 1 == geometry.vertices.length) {
+        algorytm_dC(geometry.vertices, GUI);
+      }
+      render();
+      if (document.getElementsByName("stopien")[0].checked) {
+        GUI.stopien = 2;
+      } else {
+        GUI.stopien = 3
+      };
+      geometry = new THREE.Geometry();
+      for (var i = 0; i < points.length; i++) {
+        geometry.vertices.push(points[i].position);
+      }
+    }
 
     function algorytm_dC(Arr, deg) {
       var n = Arr.length;
@@ -57,15 +82,23 @@
       var lines = new THREE.Line(newGeometry, new THREE.LineBasicMaterial({
         color: "blue"
       }));
-      scene.add(lines);
+      group.add(lines);
       render();
       geometry = newGeometry.clone();
       deg.stopien--;
+      if (deg.stopien < 1) {
+        document.getElementById("dalej").className = "inactive";
+        renderer.domElement.addEventListener("mousemove", onMove, false);
+        renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+        renderer.domElement.addEventListener("mouseup", onMouseUp, false);
+      }
       if (geometry.vertices.length == 1) {
         drawPoint(geometry.vertices[0]);
         render();
-        return new THREE.Vector3(geometry.vertices[0]);
+        return;
       }
+      if (document.getElementById("dalej").className == "inactive" && move)
+        algorytm_dC(geometry.vertices, deg);
     }
 
     function drawBezier(geometry) {
@@ -94,7 +127,7 @@
       point.position.x = position.x;
       point.position.y = position.y;
       point.scale.x = point.scale.y = 10;
-      scene.add(point);
+      group.add(point);
     }
 
     function addPoint(Px, Py) {
@@ -130,6 +163,7 @@
     }
 
     function init() {
+      degree = GUI.stopien;
       container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
@@ -151,6 +185,9 @@
       );
       scene.add(plane);
 
+      group.name = "pomocnicze";
+      scene.add(group);
+
       geometry = new THREE.Geometry();
 
       window.addEventListener("resize", onResize, false);
@@ -163,9 +200,13 @@
         //Aby utworzyć nową linie potrzeba nowy obiekt Geometry. Najpierw trzeba usunąć poprzedni.
         delete geometry.vertices;
         geometry = new THREE.Geometry();
+        group.children = [];
         scene.children = [];
+        points = [];
+        scene.add(group);
         renderer.clear();
         (document.getElementById('drugi').checked) ? GUI.stopien = 2: GUI.stopien = 3;
+        document.getElementById("dalej").className = "";
       } catch (err) {
         console.error("Error: " + err.message);
       }
@@ -181,6 +222,44 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    function onMove(event) {
+      event.preventDefault();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      if (SELECTED) {
+        requestAnimationFrame(render);
+        var intersects = raycaster.intersectObject(plane);
+        if (intersects.length > 0) {
+          SELECTED.position.copy(intersects[0].point.sub(offset));
+          move = true;
+          GUI.stopien = degree;
+          geometry.verticesNeedUpdate = true;
+          scene.remove(scene.getObjectByName('bezier'));
+          drawBezier(geometry);
+          draw_deCasteljau();
+        }
+        return;
+      }
+
+      var intersects = raycaster.intersectObjects(points);
+      if (intersects.length > 0) {
+        //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+        if (INTERSECTED != intersects[0].object) {
+          INTERSECTED = intersects[0].object;
+          temp = INTERSECTED.material.color.getHex();
+          INTERSECTED.material.color.set("red");
+          plane.position.copy(INTERSECTED.position);
+        }
+        document.body.style.cursor = 'pointer';
+      } else {
+        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+        INTERSECTED = null;
+        document.body.style.cursor = 'auto';
+      }
+      render();
+    }
+
     function onClick(event) {
       mouse.x = event.clientX - window.innerWidth / 2;
       mouse.y = -(event.clientY - window.innerHeight / 2);
@@ -188,6 +267,33 @@
         addPoint(mouse.x, mouse.y);
       }
       render();
+    }
+
+    function onMouseDown(event) {
+      event.preventDefault();
+      raycaster.setFromCamera(mouse, camera);
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      var intersects = raycaster.intersectObjects(points);
+      if (intersects.length > 0) {
+        SELECTED = intersects[0].object;
+        var intersect = raycaster.intersectObject(plane);
+        if (intersect.length > 0) {
+          offset.copy(intersect[0].point).sub(plane.position);
+        }
+        document.body.style.cursor = 'move';
+      }
+      render();
+    }
+
+    function onMouseUp(event) {
+      event.preventDefault();
+      if (INTERSECTED) {
+        plane.position.copy(INTERSECTED.position);
+        SELECTED = null;
+      }
+      move = false;
+      document.body.style.cursor = 'auto';
     }
   </script>
 </body>
