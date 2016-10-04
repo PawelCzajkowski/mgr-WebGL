@@ -13,10 +13,13 @@
     }
 
     #label {
+      -webkit-user-select:none;
+      -moz-user-select:none;
+      user-select:none;
       position: absolute;
       width: 85%;
       left: 10%;
-      bottom: 0;
+      bottom: -5px;
       text-align: justify;
     }
   </style>
@@ -35,14 +38,14 @@
     <li style="margin: 10">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
-    <li style="margin: 10">
-      <input type="checkbox" onclick="drawKnots()">Rysuj</li>
-    <li>
-      <input type="checkbox" id="otoczka" onclick="change()">Otoczka</li>
-    <li>
-      <input type="checkbox" id="boehm" onclick="change()">Boehm</li>
-    <li><a href="#" onclick="resetWeights()">Równaj wagi</a></li>
-    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
+      <li style="margin: 10">
+        <input type="checkbox" onclick="drawKnots()">Rysuj</li>
+      <li>
+        <input type="checkbox" id="otoczka" onclick="change()">Otoczka</li>
+      <li>
+        <input type="checkbox" id="boehm" onclick="change()">Boehm</li>
+      <li><a href="#" onclick="resetWeights()">Równaj wagi</a></li>
+      <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
 
   <script src="../js/three.min.js"></script>
@@ -57,13 +60,16 @@
     var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane;
     var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry;
     var points = [],
-      nurbsWezly = [];
+      nurbsWezly = [],
+      knots = [];
+    var A, B, V, width, height;
     var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
-    var isClosed = false;
+    var redraw = false;
 
     var idx = 0;
     var stopien = 3;
+    var factor = 0.3;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
@@ -71,6 +77,10 @@
 
     init();
     render();
+
+    function length(v) {
+      return Math.sqrt(v.x * v.x);
+    }
 
     function change() {
       if (document.getElementById("otoczka").checked) {
@@ -156,14 +166,12 @@
     }
 
     function drawGraph() {
-      var width = 0.3*window.innerWidth;
-      var height = 0.3*window.innerHeight;
       var boxGeometry = new THREE.Geometry();
       boxGeometry.vertices.push(
-        new THREE.Vector3(-width*(0.425-0.02), height/2.2, 0),
-        new THREE.Vector3(-width*(0.425-0.02), -height/2.8, 0),
-        new THREE.Vector3(width*(0.425+0.02), -height/2.8, 0),
-        new THREE.Vector3(width*(0.425+0.02), height/2.2, 0));
+        new THREE.Vector3(-width * (0.425 - 0.02), height / 2.2, 0),
+        new THREE.Vector3(-width * (0.425 - 0.02), -height / 2.8, 0),
+        new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0),
+        new THREE.Vector3(width * (0.425 + 0.02), height / 2.2, 0));
       var box = new THREE.Line(boxGeometry, new THREE.LineBasicMaterial({
         color: "black"
       }));
@@ -174,27 +182,24 @@
     }
 
     function drawKnots() {
-      console.log("rysuj");
       try {
         group.children = [];
+        knots = [];
       } catch (err) {
         console.error(err.message);
       }
       var temp;
-      var width = 0.3*window.innerWidth;
-      var height = 0.3*window.innerHeight;
-      var A =  new THREE.Vector3(-width*(0.425-0.02), -height/2.8, 0);
-      var B =  new THREE.Vector3(width*(0.425+0.02), -height/2.8, 0);
 
-      var pMaterial = new THREE.SpriteMaterial({
-        color: "blue"
-      });
       for (var i = 0; i < nurbsWezly.length; i++) {
+        var pMaterial = new THREE.SpriteMaterial({
+          color: "blue"
+        });
         temp = new THREE.Vector3().lerpVectors(A, B, nurbsWezly[i]);
         var point = new THREE.Sprite(pMaterial);
         point.scale.x = point.scale.y = 8;
         point.position.x = temp.x;
         point.position.y = temp.y;
+        knots.push(point);
         group.add(point);
       }
     }
@@ -222,14 +227,17 @@
         console.error(e.message);
       }
 
-      nurbsWezly = [];
-      var N = nurbsPunktyKontrolne.length
-      for (var i = 0; i <= stopien; i++) {
-        nurbsWezly.push(0);
-      }
-      for (var i = 0; i < N; i++) {
-        var wezel = (i + 1) / (N - stopien);
-        nurbsWezly.push(THREE.Math.clamp(wezel, 0, 1));
+      var N = nurbsPunktyKontrolne.length;
+      if (!redraw) {
+        console.log("redraw");
+        nurbsWezly = [];
+        for (var i = 0; i <= stopien; i++) {
+          nurbsWezly.push(0);
+        }
+        for (var i = 0; i < N; i++) {
+          var wezel = (i + 1) / (N - stopien);
+          nurbsWezly.push(THREE.Math.clamp(wezel, 0, 1));
+        }
       }
 
       nurbsCurve = new THREE.NURBSCurve(stopien, nurbsWezly, nurbsPunktyKontrolne);
@@ -272,7 +280,7 @@
     }
 
     function render() {
-
+      console.log(redraw);
       camera.lookAt(scene.position);
       camera2.lookAt(scene2.position);
       renderer.render(scene, camera);
@@ -300,10 +308,10 @@
       camera.position.z = 100;
 
       // deklaracja i definicja scene oraz renderara dla wykresu
-      var graph  = document.getElementById("wykres");
+      var graph = document.getElementById("wykres");
       document.body.appendChild(graph);
       scene2 = new THREE.Scene();
-      camera2 = new THREE.OrthographicCamera(0.3*window.innerWidth / -2, 0.3*window.innerWidth / 2, 0.3*window.innerHeight / 2, 0.3*window.innerHeight / -2, 1, 100);
+      camera2 = new THREE.OrthographicCamera(factor * window.innerWidth / -2, factor * window.innerWidth / 2, factor * window.innerHeight / 2, factor * window.innerHeight / -2, 1, 100);
       camera2.position.z = 10;
 
       if (webglAvailable()) {
@@ -324,7 +332,7 @@
 
       renderer2.setClearColor("#fbe6b6");
       renderer2.setPixelRatio(window.devicePixelRatio);
-      renderer2.setSize(window.innerWidth * 0.3, window.innerHeight * 0.3);
+      renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
       graph.appendChild(renderer2.domElement);
 
       raycaster = new THREE.Raycaster();
@@ -335,9 +343,16 @@
         })
       );
       scene.add(plane);
+      scene2.add(plane);
 
       group.name = "deBoor";
       scene2.add(group);
+
+      width = factor * window.innerWidth;
+      height = factor * window.innerHeight;
+      A = new THREE.Vector3(-width * (0.425 - 0.02), -height / 2.8, 0);
+      B = new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0);
+      V = new THREE.Vector3().subVectors(B, A);
 
       drawGraph();
 
@@ -346,6 +361,10 @@
       renderer.domElement.addEventListener("click", onClick, false);
       renderer.domElement.addEventListener("mousedown", onMouseDown, false);
       renderer.domElement.addEventListener("mouseup", onMouseUp, false);
+
+      renderer2.domElement.addEventListener("mousemove", onMove2, false);
+      renderer2.domElement.addEventListener("mousedown", onMouseDown2, false);
+      renderer2.domElement.addEventListener("mouseup", onMouseUp2, false);
     }
 
     function onResize() {
@@ -356,7 +375,7 @@
       camera.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer2.setSize(window.innerWidth * 0.3, window.innerHeight * 0.3);
+      renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
     }
 
     function onMove(event) {
@@ -421,9 +440,7 @@
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
         var intersect = raycaster.intersectObject(plane);
-        if (intersect.length > 0) {
-          offset.copy(intersect[0].point).sub(plane.position);
-        }
+        if (intersect.length > 0) {}
         document.body.style.cursor = 'move';
       }
       render();
@@ -436,6 +453,70 @@
         SELECTED = null;
       }
       document.body.style.cursor = 'auto';
+    }
+
+    function onMove2(event) {
+      event.preventDefault();
+      mouse.x = (2 * event.clientX) / (factor * window.innerWidth) + (factor - 2) / factor;
+      mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
+      raycaster.setFromCamera(mouse, camera2);
+      if (SELECTED) {
+        requestAnimationFrame(render);
+        var intersects = raycaster.intersectObject(plane);
+        if (intersects.length > 0) {
+          SELECTED.position.x = intersects[0].point.sub(offset).x;
+          var i = knots.indexOf(SELECTED);
+          nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
+          console.log(nurbsWezly[i]);
+          drawNURBS();
+        }
+        return;
+      }
+
+      var intersects = raycaster.intersectObjects(knots);
+      if (intersects.length > 0) {
+        //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+        if (INTERSECTED != intersects[0].object) {
+          INTERSECTED = intersects[0].object;
+          temp = INTERSECTED.material.color.getHex();
+          INTERSECTED.material.color.set("red");
+          plane.position.copy(INTERSECTED.position);
+        }
+        document.body.style.cursor = 'pointer';
+      } else {
+        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+        INTERSECTED = null;
+        document.body.style.cursor = 'auto';
+      }
+      render();
+    }
+
+    function onMouseDown2(event) {
+      redraw = true;
+      event.preventDefault();
+      raycaster.setFromCamera(mouse, camera2);
+      mouse.x = (2 * event.clientX) / (factor * window.innerWidth) + (factor - 2) / factor;
+      mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
+      var intersects = raycaster.intersectObjects(knots);
+      if (intersects.length > 0) {
+        SELECTED = intersects[0].object;
+        var intersect = raycaster.intersectObject(plane);
+        if (intersect.length > 0) {
+          offset.copy(intersect[0].point).sub(plane.position);
+        }
+        document.body.style.cursor = 'move';
+      }
+      render();
+    }
+
+    function onMouseUp2(event) {
+      event.preventDefault();
+      if (INTERSECTED) {
+        plane.position.copy(INTERSECTED.position);
+        SELECTED = null;
+      }
+      document.body.style.cursor = 'auto';
+      redraw = false;
     }
   </script>
 </body>
