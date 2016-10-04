@@ -52,6 +52,13 @@ a.nowy {
   margin-top: -4px;
 }
 
+a.inactive {
+  background-color: #555;
+  color: darkslategray;
+  pointer-events: none;
+  cursor: default;
+}
+
 #suwak {
   position: static;
   width: 98%;
