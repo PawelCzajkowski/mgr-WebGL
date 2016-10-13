@@ -13,13 +13,13 @@
     }
 
     #label {
-      -webkit-user-select:none;
-      -moz-user-select:none;
-      user-select:none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
       position: absolute;
       width: 85%;
       left: 10%;
-      bottom: -5px;
+      bottom: -15px;
       text-align: justify;
     }
   </style>
@@ -38,8 +38,6 @@
     <li style="margin: 10">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
-      <li style="margin: 10">
-        <input type="checkbox" onclick="drawKnots()">Rysuj</li>
       <li>
         <input type="checkbox" id="otoczka" onclick="change()">Otoczka</li>
       <li>
@@ -58,10 +56,9 @@
     /*jshint globalstrict: true*/
     "use strict";
     var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane;
-    var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry;
+    var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry, knots;
     var points = [],
-      nurbsWezly = [],
-      knots = [];
+      nurbsWezly = [];
     var A, B, V, width, height;
     var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
@@ -162,6 +159,7 @@
       idx++;
 
       nurbsPunktyKontrolne.push(new THREE.Vector4(Px, Py, 0, 5));
+      redraw = false;
       drawNURBS();
     }
 
@@ -189,18 +187,24 @@
         console.error(err.message);
       }
       var temp;
-
-      for (var i = 0; i < nurbsWezly.length; i++) {
-        var pMaterial = new THREE.SpriteMaterial({
+      var l = Math.round(nurbsWezly.length / 2);
+      for (var i = 0, j = -l; i < nurbsWezly.length; i++, j++) {
+        temp = new THREE.Vector3().lerpVectors(A, B, nurbsWezly[i]);
+        var cubegeometry = new THREE.PlaneGeometry(8, 8);
+        var material = new THREE.MeshBasicMaterial({
           color: "blue"
         });
-        temp = new THREE.Vector3().lerpVectors(A, B, nurbsWezly[i]);
-        var point = new THREE.Sprite(pMaterial);
-        point.scale.x = point.scale.y = 8;
-        point.position.x = temp.x;
-        point.position.y = temp.y;
-        knots.push(point);
-        group.add(point);
+        var cube = new THREE.Mesh(cubegeometry, material);
+        cube.position.x = temp.x;
+        cube.position.y = temp.y;
+        if (nurbsWezly.length % 2 === 0) {
+          if (j === 0) j++;
+          cube.position.z = l - Math.abs(j);
+        } else {
+          cube.position.z = l - Math.abs(j + 1);
+        }
+        group.add(cube);
+        knots.push(cube);
       }
     }
 
@@ -229,7 +233,6 @@
 
       var N = nurbsPunktyKontrolne.length;
       if (!redraw) {
-        console.log("redraw");
         nurbsWezly = [];
         for (var i = 0; i <= stopien; i++) {
           nurbsWezly.push(0);
@@ -243,7 +246,7 @@
       nurbsCurve = new THREE.NURBSCurve(stopien, nurbsWezly, nurbsPunktyKontrolne);
       if (stopien < N) {
         var nurbsGeometry = new THREE.Geometry();
-        nurbsGeometry.vertices = nurbsCurve.getPoints(10 * N);
+        nurbsGeometry.vertices = nurbsCurve.getPoints(15 * N);
         var nurbsMaterial = new THREE.LineBasicMaterial({
           color: "red",
           linewidth: 3
@@ -280,7 +283,6 @@
     }
 
     function render() {
-      console.log(redraw);
       camera.lookAt(scene.position);
       camera2.lookAt(scene2.position);
       renderer.render(scene, camera);
@@ -312,7 +314,7 @@
       document.body.appendChild(graph);
       scene2 = new THREE.Scene();
       camera2 = new THREE.OrthographicCamera(factor * window.innerWidth / -2, factor * window.innerWidth / 2, factor * window.innerHeight / 2, factor * window.innerHeight / -2, 1, 100);
-      camera2.position.z = 10;
+      camera2.position.z = 100;
 
       if (webglAvailable()) {
         renderer = new THREE.WebGLRenderer({
@@ -374,6 +376,12 @@
       camera.down = window.innerWidth / -2;
       camera.updateProjectionMatrix();
 
+      camera2.left = (factor * window.innerWidth) / -2;
+      camera2.right = (factor * window.innerWidth) / 2;
+      camera2.top = (factor * window.innerHeight) / 2;
+      camera2.down = (factor * window.innerWidth) / -2;
+      camera2.updateProjectionMatrix();
+
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
     }
@@ -407,13 +415,12 @@
           //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
           if (INTERSECTED != intersects[0].object) {
             INTERSECTED = intersects[0].object;
-            temp = INTERSECTED.material.color.getHex();
             INTERSECTED.material.color.set("red");
             plane.position.copy(INTERSECTED.position);
           }
           document.body.style.cursor = 'pointer';
         } else {
-          if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+          if (INTERSECTED) INTERSECTED.material.color.set("green");
           INTERSECTED = null;
           document.body.style.cursor = 'auto';
         }
@@ -464,11 +471,14 @@
         requestAnimationFrame(render);
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
-          SELECTED.position.x = intersects[0].point.sub(offset).x;
-          var i = knots.indexOf(SELECTED);
-          nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
-          console.log(nurbsWezly[i]);
-          drawNURBS();
+          if (intersects[0].point.sub(offset).x > A.x && intersects[0].point.sub(offset).x < B.x) {
+            SELECTED.position.x = intersects[0].point.sub(offset).x;
+            var i = knots.indexOf(SELECTED);
+            console.log("i: " + i);
+            console.log(intersects[0].point.sub(offset).z);
+            nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
+            checkKnots(nurbsWezly, i);
+          }
         }
         return;
       }
@@ -478,13 +488,12 @@
         //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
         if (INTERSECTED != intersects[0].object) {
           INTERSECTED = intersects[0].object;
-          temp = INTERSECTED.material.color.getHex();
           INTERSECTED.material.color.set("red");
           plane.position.copy(INTERSECTED.position);
         }
         document.body.style.cursor = 'pointer';
       } else {
-        if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+        if (INTERSECTED) INTERSECTED.material.color.set("blue");
         INTERSECTED = null;
         document.body.style.cursor = 'auto';
       }
@@ -516,7 +525,7 @@
         SELECTED = null;
       }
       document.body.style.cursor = 'auto';
-      redraw = false;
+      drawNURBS();
     }
   </script>
 </body>

@@ -30,6 +30,13 @@ function dwumian(n, k) {
   return trojkatPascala[n][k];
 }
 
+function checkKnots(arr, j) {
+  for (var i = 0; i < arr.length; i++) {
+    if (i < j && arr[i] > arr[j]) arr[i] = arr[j];
+    if (i > j && arr[i] < arr[j]) arr[i] = arr[j];
+  }
+}
+
 //wyznacz punkty posredni do wyznacznia wektorów A, B, C i D
 //umożliwiających wyznacznie krzywizny
 function wyznaczPunkty(inArray, u) {
