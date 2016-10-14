@@ -56,10 +56,10 @@
     /*jshint globalstrict: true*/
     "use strict";
     var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane;
-    var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry, knots;
+    var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry;
     var points = [],
       nurbsWezly = [];
-    var A, B, V, width, height;
+    var A, B, V, Vy, width, height;
     var nurbsPunktyKontrolne = []; //tablica Vector4(x,y,z,w)
     var isWebGL;
     var redraw = false;
@@ -71,6 +71,9 @@
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
     var group = new THREE.Group();
+    var groupOfKnots = new THREE.Group();
+
+    var rand = Math.random();
 
     init();
     render();
@@ -108,7 +111,6 @@
 
     function changeDegree(val) {
       stopien = Number(val);
-      if (val == 1) stopien = Number(0);
 
       if (stopien != 2 && stopien != 3) {
         document.getElementById("boehm").checked = false;
@@ -170,6 +172,9 @@
         new THREE.Vector3(-width * (0.425 - 0.02), -height / 2.8, 0),
         new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0),
         new THREE.Vector3(width * (0.425 + 0.02), height / 2.2, 0));
+
+      Vy = new THREE.Vector3(0, Math.abs(height / 2.2 + height / 2.8), 0);
+
       var box = new THREE.Line(boxGeometry, new THREE.LineBasicMaterial({
         color: "black"
       }));
@@ -181,8 +186,7 @@
 
     function drawKnots() {
       try {
-        group.children = [];
-        knots = [];
+        groupOfKnots.children = [];
       } catch (err) {
         console.error(err.message);
       }
@@ -203,8 +207,7 @@
         } else {
           cube.position.z = l - Math.abs(j + 1);
         }
-        group.add(cube);
-        knots.push(cube);
+        groupOfKnots.add(cube);
       }
     }
 
@@ -222,11 +225,45 @@
       scene.add(controlLines);
     }
 
+    function drawDeBoor() {
+      try {
+        group.children = [];
+        deBoor = [];
+        lines = [];
+      } catch (err) {
+        console.error(err.message);
+      }
+      var deBoor = [],
+        lines = [];
+      var s, t;
+      for (var i = 0; i <= nurbsPunktyKontrolne.length; i++) {
+        deBoor[i] = new THREE.Geometry();
+      }
+
+      for (var u = 0; u.toFixed(3) <= 1; u += 0.01) {
+        var span = THREE.NURBSUtils.findSpan(stopien, u, nurbsWezly);
+        t = THREE.NURBSUtils.calcBasisFunctions(span, u, stopien, nurbsWezly);
+        for (var i = 0; i <= stopien; i++) {
+          deBoor[i + span - stopien].vertices.push(new THREE.Vector3((A.x + u * V.x), (A.y + t[i] * Vy.y), 0));
+        }
+      }
+
+      for (var i = 0, color = 0; i <= nurbsPunktyKontrolne.length; i++, color += rand) {
+        var material = new THREE.LineBasicMaterial({
+          color: '#' + (0x1000000 + (color) * 0xffffff).toString(16).substr(1, 6),
+          linewidth: 2
+        });
+        lines[i] = new THREE.Line(deBoor[i], material);
+        group.add(lines[i]);
+      }
+    }
+
     function drawNURBS() {
       try {
         scene.remove(scene.getObjectByName("NURBS"));
         scene.remove(scene.getObjectByName("lines"));
         scene.remove(scene.getObjectByName("points"));
+        scene.remove(scene.getObjectByName("deBoor"));
       } catch (e) {
         console.error(e.message);
       }
@@ -270,6 +307,7 @@
           point.position.y = position.y;
           punkty.add(point);
         }
+        drawDeBoor();
       }
       if (document.getElementById("otoczka").checked) {
         rysujOtoczke(copyPoints(points));
@@ -349,6 +387,8 @@
 
       group.name = "deBoor";
       scene2.add(group);
+      groupOfKnots.name = "knots";
+      scene2.add(groupOfKnots);
 
       width = factor * window.innerWidth;
       height = factor * window.innerHeight;
@@ -451,6 +491,7 @@
         document.body.style.cursor = 'move';
       }
       render();
+      requestAnimationFrame(render);
     }
 
     function onMouseUp(event) {
@@ -473,17 +514,16 @@
         if (intersects.length > 0) {
           if (intersects[0].point.sub(offset).x > A.x && intersects[0].point.sub(offset).x < B.x) {
             SELECTED.position.x = intersects[0].point.sub(offset).x;
-            var i = knots.indexOf(SELECTED);
-            console.log("i: " + i);
-            console.log(intersects[0].point.sub(offset).z);
+            var i = groupOfKnots.children.indexOf(SELECTED);
             nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
             checkKnots(nurbsWezly, i);
+            drawDeBoor();
           }
         }
         return;
       }
 
-      var intersects = raycaster.intersectObjects(knots);
+      var intersects = raycaster.intersectObjects(groupOfKnots.children);
       if (intersects.length > 0) {
         //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
         if (INTERSECTED != intersects[0].object) {
@@ -506,7 +546,7 @@
       raycaster.setFromCamera(mouse, camera2);
       mouse.x = (2 * event.clientX) / (factor * window.innerWidth) + (factor - 2) / factor;
       mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
-      var intersects = raycaster.intersectObjects(knots);
+      var intersects = raycaster.intersectObjects(groupOfKnots.children);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
         var intersect = raycaster.intersectObject(plane);
