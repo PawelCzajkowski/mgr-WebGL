@@ -30,6 +30,10 @@ function dwumian(n, k) {
   return trojkatPascala[n][k];
 }
 
+function length(v) {
+  return Math.sqrt(v.x * v.x);
+}
+
 function checkKnots(arr, j) {
   for (var i = 0; i < arr.length; i++) {
     if (i < j && arr[i] > arr[j]) arr[i] = arr[j];
