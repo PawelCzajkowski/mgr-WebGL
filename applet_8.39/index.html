@@ -33,7 +33,7 @@
 
   <ul id="navi">
     <li style="padding: 7px">Stopień krzywej:
-      <input type="number" id="stopien" onchange="changeDegree(this.value)" value="3" size="2" min="1">
+      <input type="number" id="stopien" onclick="changeDegree(this.value)" value="3" size="2" min="1">
     </li>
     <li style="margin: 10">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
@@ -279,7 +279,7 @@
       nurbsCurve = new THREE.NURBSCurve(stopien, nurbsWezly, nurbsPunktyKontrolne);
       if (stopien < N) {
         var nurbsGeometry = new THREE.Geometry();
-        nurbsGeometry.vertices = nurbsCurve.getPoints(15 * N);
+        nurbsGeometry.vertices = nurbsCurve.getPoints(30 * N);
         var nurbsMaterial = new THREE.LineBasicMaterial({
           color: "red",
           linewidth: 3
