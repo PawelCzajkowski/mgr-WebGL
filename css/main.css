@@ -18,9 +18,9 @@ body {
 }
 
 #wykres {
+  background-color: #fbe6b6;
   width: 30%;
-  height: 30%;
-  bottom: 0px;
+  bottom: 0;
   right: 0px;
   position: fixed;
   border-color: black;

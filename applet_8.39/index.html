@@ -19,8 +19,15 @@
       position: absolute;
       width: 85%;
       left: 10%;
-      bottom: -15px;
+      bottom: 5%;
       text-align: justify;
+    }
+
+    #suwak {
+      position: absolute;
+      width: 85%;
+      margin-left: 10%;
+      bottom: 10px;
     }
   </style>
 </head>
@@ -28,7 +35,9 @@
 <body>
   <div id="wykres">
     <div id="labelV">N(t)</div>
-    <div id="label">0 t 1<span style="width: 100%; display: inline-block;"></span></div>
+    <div id="label">0 t 1<span style="width: 100%; display: inline-block;"></span>
+    </div>
+    <input class="suwak" id="suwak" type="range" min="0" max="1" step="0.01" value="0" onmousemove="drawPoints()" onclick="drawPoints()">
   </div>
 
   <ul id="navi">
@@ -67,6 +76,7 @@
     var idx = 0;
     var stopien = 3;
     var factor = 0.3;
+    var factorV = 0.4;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
@@ -260,6 +270,43 @@
         lines[i] = new THREE.Line(deBoor[i], material);
         group.add(lines[i]);
       }
+      drawPoints();
+    }
+
+    function drawPoints() {
+      //punkt
+      try {
+        scene.remove(scene.getObjectByName('punkt'));
+        scene2.remove(scene2.getObjectByName('punkt'));
+      } catch (e) {
+        console.error(e.message)
+      };
+      var vertex, point, graph;
+      var group = new THREE.Group();
+      var Pmaterial = new THREE.SpriteMaterial({
+        color: "#007ac1"
+      });
+      var val = document.getElementById('suwak').value;
+      vertex = nurbsCurve.getPoint(val);
+      var point = new THREE.Sprite(Pmaterial);
+      point.position.x = vertex.x;
+      point.position.y = vertex.y;
+      point.scale.x = point.scale.y = 10;
+      point.name = 'punkt';
+      scene.add(point);
+
+      for (var i = 0; i <= nurbsPunktyKontrolne.length; i++) {
+        var span = THREE.NURBSUtils.findSpan(stopien, val, nurbsWezly);
+        var t = THREE.NURBSUtils.calcBasisFunctions(span, val, stopien, nurbsWezly);
+        var point = new THREE.Sprite(Pmaterial);
+        point.position.x = A.x + val * V.x;
+        point.position.y = A.y + t[i] * Vy.y;
+        point.scale.x = point.scale.y = 10;
+        group.add(point);
+      }
+      group.name = 'punkt';
+      scene2.add(group);
+      render();
     }
 
     function drawNURBS() {
@@ -345,6 +392,7 @@
 
 
     function init() {
+
       var container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
@@ -355,7 +403,7 @@
       var graph = document.getElementById("wykres");
       document.body.appendChild(graph);
       scene2 = new THREE.Scene();
-      camera2 = new THREE.OrthographicCamera(factor * window.innerWidth / -2, factor * window.innerWidth / 2, factor * window.innerHeight / 2, factor * window.innerHeight / -2, 1, 100);
+      camera2 = new THREE.OrthographicCamera(factor * window.innerWidth / -2, factor * window.innerWidth / 2, factorV * window.innerHeight / 2, factorV * window.innerHeight / -2, 1, 100);
       camera2.position.z = 100;
 
       if (webglAvailable()) {
@@ -376,8 +424,8 @@
 
       renderer2.setClearColor("#fbe6b6");
       renderer2.setPixelRatio(window.devicePixelRatio);
-      renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
-      graph.appendChild(renderer2.domElement);
+      renderer2.setSize(window.innerWidth * factor, window.innerHeight * factorV);
+      graph.insertBefore(renderer2.domElement, graph.childNodes[graph.childNodes.length - 3]);
 
       raycaster = new THREE.Raycaster();
 
@@ -394,8 +442,9 @@
       groupOfKnots.name = "knots";
       scene2.add(groupOfKnots);
 
-      width = factor * window.innerWidth;
-      height = factor * window.innerHeight;
+      width = window.innerWidth * factor;
+      height = window.innerHeight * factorV;
+
       A = new THREE.Vector3(-width * (0.425 - 0.02), -height / 2.8, 0);
       B = new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0);
       V = new THREE.Vector3().subVectors(B, A);
@@ -422,12 +471,13 @@
 
       camera2.left = (factor * window.innerWidth) / -2;
       camera2.right = (factor * window.innerWidth) / 2;
-      camera2.top = (factor * window.innerHeight) / 2;
-      camera2.down = (factor * window.innerWidth) / -2;
+      camera2.top = (factorV * window.innerHeight) / 2;
+      camera2.down = (factorV * window.innerWidth) / -2;
       camera2.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
+      renderer2.setSize(window.innerWidth * factor, window.innerHeight * factorV);
+      render();
     }
 
     function onMove(event) {
@@ -509,8 +559,8 @@
 
     function onMove2(event) {
       event.preventDefault();
-      mouse.x = (2 * event.clientX) / (factor * window.innerWidth) + (factor - 2) / factor;
-      mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
+      mouse.x = (2 * event.clientX) / (width) + (factor - 2) / factor;
+      mouse.y = -(2 * event.clientY) / (height) + (2 - factorV) / factorV;
       raycaster.setFromCamera(mouse, camera2);
       if (SELECTED) {
         requestAnimationFrame(render);
@@ -545,11 +595,12 @@
     }
 
     function onMouseDown2(event) {
+      console.log("TAK");
       redraw = true;
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera2);
-      mouse.x = (2 * event.clientX) / (factor * window.innerWidth) + (factor - 2) / factor;
-      mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
+      mouse.x = (2 * event.clientX) / (width) + (factor - 2) / factor;
+      mouse.y = -(2 * event.clientY) / (height) + (2 - factorV) / factorV;
       var intersects = raycaster.intersectObjects(groupOfKnots.children);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
