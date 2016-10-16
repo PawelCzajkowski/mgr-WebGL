@@ -211,8 +211,8 @@ function wyswietlOtoczke(controlPoints, degree) {
   for (var i = 0; i < controlPoints.length - degree; i++) {
     otoczkaGeometry = new THREE.Geometry();
     for (var j = 0; j < degree + 1; j++) {
-      controlPoints[i + j].position.z = -10;
-      otoczkaGeometry.vertices.push(controlPoints[i + j].position);
+      controlPoints[i + j].z = -10;
+      otoczkaGeometry.vertices.push(controlPoints[i + j]);
     }
     var otoczka = wyznaczOtoczke(otoczkaGeometry.vertices);
     for (var k = 0; k < otoczka.length; k++) {

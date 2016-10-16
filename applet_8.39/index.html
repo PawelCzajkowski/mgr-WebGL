@@ -41,7 +41,7 @@
       <li>
         <input type="checkbox" id="otoczka" onclick="change()">Otoczka</li>
       <li>
-        <input type="checkbox" id="boehm" onclick="change()">Boehm</li>
+        <input type="checkbox" id="boehm" onclick="drawBoehm()">Boehm</li>
       <li><a href="#" onclick="resetWeights()">Równaj wagi</a></li>
       <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
   </ul>
@@ -72,6 +72,7 @@
     var offset = new THREE.Vector3();
     var group = new THREE.Group();
     var groupOfKnots = new THREE.Group();
+    var otoczka = new THREE.Group();
 
     var rand = Math.random();
 
@@ -79,12 +80,19 @@
     render();
 
     function change() {
+      scene.remove(scene.getObjectByName("otoczka"));
       if (document.getElementById("otoczka").checked) {
-        rysujOtoczke(copyPoints(points));
-      } else if (document.getElementById("boehm").checked) {
+        document.getElementById("boehm").checked = false;
+        wyswietlOtoczke(copyPoints(points), stopien);
+      }
+      render();
+    }
+
+    function drawBoehm() {
+      scene.remove(scene.getObjectByName("otoczka"));
+      if (document.getElementById("boehm").checked) {
+        document.getElementById("otoczka").checked = false;
         boehmAlgoritm(nurbsCurve);
-      } else if (scene.getObjectByName("otoczka") !== undefined) {
-        scene.remove(scene.getObjectByName("otoczka"));
       }
       render();
     }
@@ -306,7 +314,7 @@
         drawDeBoor();
       }
       if (document.getElementById("otoczka").checked) {
-        rysujOtoczke(copyPoints(points));
+        wyswietlOtoczke(copyPoints(points), stopien);
       } else if (document.getElementById("boehm").checked) {
         boehmAlgoritm(nurbsCurve);
       }
@@ -437,7 +445,7 @@
             nurbsPunktyKontrolne[i].x = SELECTED.position.x;
             nurbsPunktyKontrolne[i].y = SELECTED.position.y;
             if (document.getElementById("otoczka").checked) {
-              rysujOtoczke(copyPoints(points));
+              wyswietlOtoczke(copyPoints(points), stopien);
             } else if (document.getElementById("boehm").checked) {
               boehmAlgoritm(nurbsCurve);
             }
