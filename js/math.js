@@ -4,8 +4,6 @@
 
 "use strict";
 //plik zawierający przydatne funkcje matematyczne
-/*jshint globalstrict: true*/
-/*global window, THREE */
 
 var trojkatPascala = [
   [1],
