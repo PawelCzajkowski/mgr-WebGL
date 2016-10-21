@@ -1,3 +1,7 @@
+/* @author Paweł Czajkowski
+ * Copyrights © 2016 All rights reserved.
+ */
+
 "use strict";
 //plik zawierający przydatne funkcje matematyczne
 /*jshint globalstrict: true*/
