@@ -46,9 +46,9 @@
         }
       }
       if (document.getElementById("clearBuffer").checked) {
-        renderer.autoClear = true;
+        renderer.autoClearDepth = true;
       } else {
-        renderer.autoClear = false;
+        renderer.autoClearDepth = false;
       }
       render();
     }
@@ -84,9 +84,8 @@
           preserveDrawingBuffer: true
         });
       } else {
-        renderer = new THREE.CanvasRenderer();
+        alert("Twoja przeglądarka nie obsługuje WebGL!");
       }
-      renderer.autoClear = true;
       renderer.setClearColor("black");
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
