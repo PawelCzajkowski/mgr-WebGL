@@ -18,7 +18,8 @@ body {
   background-color: #f1f1f1;
   border-width: thin;
   border-style: groove;
-  font-size: 18px;
+  font-size: 1em;
+  z-index: 1;
 }
 
 #wykres {
