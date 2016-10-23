@@ -34,7 +34,7 @@
   </style>
 </head>
 
-<body>
+<body onload="show_div()">
   <div id="wykres">
     <div id="labelV">N(t)</div>
     <div id="label">0 t 1<span style="width: 100%; display: inline-block;"></span></div>
@@ -56,10 +56,11 @@
       <input type="checkbox" id="edit">Edytuj powierzchnię</li>
     <li style="margin-top: 0px; margin-bottom: 8px">
       <input type="checkbox" id="grid" onclick="hideGrid()">Ukryj siatkę</li>
-    <li>Wyświetl wykres <br>Cox'a-deBoor'a dla:</li>
+    <hr>
+    <li>Wyświetl funkcje <br>B-sklejane dla:</li>
     <li><input type="radio" name="type" value="uKnots" onchange="change()" checked>węzłów U</li>
     <li><input type="radio" name="type" value="vKnots" onchange="change()">węzłów V</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><a href="#" onclick="window.location.reload()">Wyczyść</a></li>
   </ul>
   <div id="popup" oncontextmenu="return false;">
     <div id="form">
@@ -149,7 +150,7 @@
       vDeg = Number(document.getElementById("vDeg").value);
       if (uDeg >= cols || vDeg >= rows) {
         passed = false;
-        alert("Za duży stopień krzywizny!");
+        alert("Za duży stopień krzywej!");
       }
       if (passed) {
         recalculateKnots();

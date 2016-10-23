@@ -11,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="../css/main.css">
 </head>
 
-<body>
+<body onload="show_div()">
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
     <li style="padding: 8px">Ilość segmentów u: <span id="u">1</span><br>
@@ -22,7 +22,7 @@
       <input type="checkbox" id="edit">Edytuj powierzchnię</li>
     <li style="margin-top: 2px">
       <input type="checkbox" id="grid" onclick="hideGrid()">Ukryj siatkę</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><a href="#" onclick="window.location.reload()">Wyczyść</a></li>
   </ul>
   <div id="popup">
     <div id="form">
