@@ -48,10 +48,10 @@
     <li>Stopień V:
       <input id='vDeg' type="number" size="3" min="1" value="1" onclick="change()">
     </li>
-    <li style="padding: 8px">Ilość segmentów u: <span id="u">1</span><br>
-      <input type="range" id="uSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
-    <li style="padding: 8px">Ilość segmentów v: <span id="v">1</span><br>
-      <input type="range" id="vSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
+    <li style="padding: 8px">Ilość segmentów u: <span id="u">3</span><br>
+      <input type="range" id="uSegments" min="1" max="10" value="3" onmousemove="setSegments()"></li>
+    <li style="padding: 8px">Ilość segmentów v: <span id="v">3</span><br>
+      <input type="range" id="vSegments" min="1" max="10" value="3" onmousemove="setSegments()"></li>
     <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj powierzchnię</li>
     <li style="margin-top: 0px; margin-bottom: 8px">
@@ -286,7 +286,7 @@
       }
       var uSegments = Number(document.getElementById("uSegments").value);
       var vSegments = Number(document.getElementById("vSegments").value);
-      var nurbsGeometry = new THREE.ParametricGeometry(getSurfacePoint, uSegments * uDeg, vSegments * vDeg);
+      var nurbsGeometry = new THREE.ParametricGeometry(getSurfacePoint, vSegments * vDeg, uSegments * uDeg);
       var mesh = new THREE.Mesh(nurbsGeometry, material);
       surface.add(mesh);
       var mesh2 = new THREE.Mesh(nurbsGeometry, new THREE.MeshBasicMaterial({
@@ -332,10 +332,15 @@
       document.getElementById('popup').style.visibility = 'hidden';
       cols = Number(document.getElementById("kolumny").value);
       rows = Number(document.getElementById("wiersze").value);
+
+      document.getElementById("vDeg").value = rows-1;
+      document.getElementById("uDeg").value = cols-1;
+
       var k = 0;
       var size = window.innerHeight * 0.2;
       var rowStep = 2 * size / (cols - 1);
       var colStep = 2 * size / (rows - 1);
+
       groupPoints = new THREE.Group();
       groupPoints.name = "punkty";
       scene.add(groupPoints);
@@ -526,7 +531,7 @@
           }
           document.body.style.cursor = 'pointer';
         } else {
-          if (INTERSECTED) INTERSECTED.material.color.set("blue");
+          if (INTERSECTED) INTERSECTED.material.color.set("green");
           INTERSECTED = null;
           document.body.style.cursor = 'auto';
         }
