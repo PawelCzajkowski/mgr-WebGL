@@ -103,7 +103,7 @@ input.knot {
   margin: 0;
 }
 
-#form {
+.form {
   display: block;
   position: absolute;
   top: 50%;
@@ -111,8 +111,16 @@ input.knot {
   transform: translate(-50%, -50%);
   background-color: lightgray;
   text-align: center;
+}
+
+form {
   padding: 20px;
-  font-size: 18px;
+}
+
+.handle {
+  background-color: darkgreen;
+  width: 100%;
+  display: inline-block;
 }
 
 #popup,

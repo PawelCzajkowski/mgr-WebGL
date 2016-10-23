@@ -14,10 +14,14 @@
 <body onload="show_div()">
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
-    <li style="padding: 8px">Ilość segmentów u: <span id="u">1</span><br>
-      <input type="range" id="uSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
-    <li style="padding: 8px">Ilość segmentów v: <span id="v">1</span><br>
-      <input type="range" id="vSegments" min="1" max="10" value="1" onmousemove="setSegments()"></li>
+    <li style="padding: 8px">Ilość segmentów u: <span id="u">1</span>
+      <br>
+      <input type="range" id="uSegments" min="1" max="10" value="1" onmousemove="setSegments()">
+    </li>
+    <li style="padding: 8px">Ilość segmentów v: <span id="v">1</span>
+      <br>
+      <input type="range" id="vSegments" min="1" max="10" value="1" onmousemove="setSegments()">
+    </li>
     <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj powierzchnię</li>
     <li style="maring-top: 0px">
@@ -25,7 +29,7 @@
     <li><a href="#" onclick="window.location.reload()">Wyczyść</a></li>
   </ul>
   <div id="popup" oncontextmenu="return false;">
-    <div id="form">
+    <div class="form">
       <form>
         Liczba wierszy:
         <input id="wiersze" type="number" min="2" value="2">
@@ -37,7 +41,8 @@
     </div>
   </div>
   <div id="waga" oncontextmenu="return false;">
-    <div id="form">
+    <div class="form" id="form">
+      <span class=handle><br></span>
       <form>
         Waga punktu:
         <span class="wartosc" id="wartosc"></span>
@@ -57,9 +62,14 @@
     var INTERSECTED, SELECTED, req;
     var controlPoints, cols, rows, weights, id;
     var groupLines, groupPoints;
+    var isMouseDown = false;
+    var divH, spanH;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
+
+    var WIDTH = document.getElementById("form").clientWidth;
+    document.getElementById("form").style.width = WIDTH + "px";
 
     init();
     render();
@@ -89,16 +99,22 @@
     }
 
     function show_waga() {
+      document.body.style.cursor = 'auto';
       document.getElementById("weight").value = weights[id];
       document.getElementById('wartosc').innerHTML = weights[id];
       document.getElementById("waga").style.visibility = "visible";
+      document.getElementsByClassName('handle')[0].addEventListener("mousedown", popupMouseDown, false);
+      document.getElementsByClassName('handle')[0].addEventListener("mouseup", popupMouseUp, false);
+      document.getElementsByClassName('handle')[0].addEventListener("mouseover", popupMouseOver, false);
+      document.getElementsByClassName('handle')[0].addEventListener("mouseleave", popupMouseLeave, false);
     }
 
     function setWeight() {
       document.getElementById("waga").style.visibility = "hidden";
-      weights[id] = Number(document.getElementById("weight").value);
-      scene.remove(scene.getObjectByName("bezierSurf"));
-      createBezierSurface();
+      document.getElementsByClassName('handle')[0].removeEventListener("mousedown", false);
+      document.getElementsByClassName('handle')[0].removeEventListener("mouseup", false);
+      document.getElementsByClassName('handle')[0].removeEventListener("mouseover", false);
+      document.getElementsByClassName('handle')[0].removeEventListener("mouseleave", false);
     }
 
     function recalculate() {
@@ -252,6 +268,9 @@
         }));
       scene.add(plane);
 
+      divH = document.getElementById("form").clientHeight;
+      spanH = document.getElementsByClassName('handle')[0].clientHeight;
+
       window.addEventListener("resize", onResize, false);
       renderer.domElement.addEventListener("mousemove", onMove, false);
       renderer.domElement.addEventListener("click", onClick, false);
@@ -274,6 +293,8 @@
     }
 
     function onResize() {
+      divH = document.getElementById("form").clientHeight;
+      spanH = document.getElementsByClassName('handle')[0].clientHeight;
       camera.left = window.innerWidth / -2;
       camera.right = window.innerWidth / 2;
       camera.top = window.innerHeight / 2;
@@ -356,6 +377,33 @@
       }
       document.body.style.cursor = 'auto';
       cancelAnimationFrame(req);
+    }
+
+    function popupMouseDown(event) {
+      document.body.style.cursor = 'move';
+      isMouseDown = true;
+      window.addEventListener("mousemove", popupMouseMove, false);
+    }
+
+    function popupMouseMove(event) {
+      if (isMouseDown) {
+        document.getElementById("form").style.top = Number((divH - spanH) / 2 + event.clientY) + "px";
+        document.getElementById("form").style.left = event.clientX + "px";
+      }
+    }
+
+    function popupMouseUp(event) {
+      document.body.style.cursor = 'auto';
+      isMouseDown = false;
+      window.removeEventListener("mousemove", false);
+    }
+
+    function popupMouseOver(event) {
+      document.body.style.cursor = 'pointer';
+    }
+
+    function popupMouseLeave(event) {
+      document.body.style.cursor = 'auto';
     }
   </script>
 </body>
