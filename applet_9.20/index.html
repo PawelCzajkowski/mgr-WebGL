@@ -63,7 +63,7 @@
     <li><a href="#" onclick="window.location.reload()">Wyczyść</a></li>
   </ul>
   <div id="popup" oncontextmenu="return false;">
-    <div id="form">
+    <div class="form">
       <form>
         Liczba wierszy:
         <input id="wiersze" type="number" min="2" value="2">
@@ -75,7 +75,8 @@
     </div>
   </div>
   <div id="waga" oncontextmenu="return false;">
-    <div id="form">
+    <div class="form" id="form">
+      <span class=handle><br></span>
       <form>
         Waga punktu: <span id="waga_span">5</span>
         <input id="weight" type="range" min="0.1" max="10" step="0.1" value="5" onmousemove="setWeight()">
@@ -100,6 +101,7 @@
     var A, B, V, Vy, width, height;
 
     var factor = 0.3;
+    var divH, spanH;
 
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
@@ -107,6 +109,8 @@
     var groupOfKnots = new THREE.Group();
 
     var rand = Math.random();
+    var WIDTH = document.getElementById("form").clientWidth;
+    document.getElementById("form").style.width = WIDTH + "px";
 
     init();
     render();
@@ -131,10 +135,18 @@
     function show_waga() {
       document.getElementById("waga_span").innerHTML = sprites[id].position.w;
       document.getElementById("waga").style.visibility = "visible";
+      document.getElementsByClassName('handle')[0].addEventListener("mousedown", popupMouseDown, false);
+      document.getElementsByClassName('handle')[0].addEventListener("mouseup", popupMouseUp, false);
+      document.getElementsByClassName('handle')[0].addEventListener("mouseover", popupMouseOver, false);
+      document.getElementsByClassName('handle')[0].addEventListener("mouseleave", popupMouseLeave, false);
     }
 
     function hide_waga() {
       document.getElementById("waga").style.visibility = "hidden";
+      document.getElementsByClassName('handle')[0].removeEventListener("mousedown", false);
+      document.getElementsByClassName('handle')[0].removeEventListener("mouseup", false);
+      document.getElementsByClassName('handle')[0].removeEventListener("mouseover", false);
+      document.getElementsByClassName('handle')[0].removeEventListener("mouseleave", false);
     }
 
     function setWeight() {
@@ -461,6 +473,9 @@
       B = new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0);
       V = new THREE.Vector3().subVectors(B, A);
 
+      divH = document.getElementById("form").clientHeight;
+      spanH = document.getElementsByClassName('handle')[0].clientHeight;
+
       drawGraph();
 
       window.addEventListener("resize", onResize, false);
@@ -489,6 +504,9 @@
     }
 
     function onResize() {
+      divH = document.getElementById("form").clientHeight;
+      spanH = document.getElementsByClassName('handle')[0].clientHeight;
+
       camera.left = window.innerWidth / -2;
       camera.right = window.innerWidth / 2;
       camera.top = window.innerHeight / 2;
@@ -650,6 +668,33 @@
       }
       document.body.style.cursor = 'auto';
       recalculate();
+    }
+
+    function popupMouseDown(event) {
+      document.body.style.cursor = 'move';
+      isMouseDown = true;
+      window.addEventListener("mousemove", popupMouseMove, false);
+    }
+
+    function popupMouseMove(event) {
+      if (isMouseDown) {
+        document.getElementById("form").style.top = Number((divH - spanH)/2+event.clientY)+"px";
+        document.getElementById("form").style.left =event.clientX+"px";
+      }
+    }
+
+    function popupMouseUp(event) {
+      document.body.style.cursor = 'auto';
+      isMouseDown = false;
+      window.removeEventListener("mousemove", false);
+    }
+
+    function popupMouseOver(event) {
+      document.body.style.cursor = 'pointer';
+    }
+
+    function popupMouseLeave(event) {
+      document.body.style.cursor = 'auto';
     }
   </script>
 </body>
