@@ -83,6 +83,9 @@
 
     function changeValue() {
       document.getElementById('wartosc').innerHTML = document.getElementById("weight").value;
+      weights[id] = Number(document.getElementById("weight").value);
+      scene.remove(scene.getObjectByName("bezierSurf"));
+      createBezierSurface();
     }
 
     function show_waga() {
@@ -302,12 +305,11 @@
           //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
           if (INTERSECTED != intersects[0].object) {
             INTERSECTED = intersects[0].object;
-            temp = INTERSECTED.material.color.getHex();
             INTERSECTED.material.color.set("red");
           }
           document.body.style.cursor = 'pointer';
         } else {
-          if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+          if (INTERSECTED) INTERSECTED.material.color.set("blue");
           INTERSECTED = null;
           document.body.style.cursor = 'auto';
         }
