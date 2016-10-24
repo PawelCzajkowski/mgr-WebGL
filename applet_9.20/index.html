@@ -43,23 +43,30 @@
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
     <li>Stopień U:
-      <input id='uDeg' type="number" size="3" min="1" value="1" onclick="change()">
+      <input id='uDeg' type="number" size="3" min="1" value="1" onclick="recalculateU()">
     </li>
     <li>Stopień V:
-      <input id='vDeg' type="number" size="3" min="1" value="1" onclick="change()">
+      <input id='vDeg' type="number" size="3" min="1" value="1" onclick="recalculateV()">
     </li>
-    <li style="padding: 8px">Ilość segmentów u: <span id="u">3</span><br>
-      <input type="range" id="uSegments" min="1" max="10" value="3" onmousemove="setSegments()"></li>
-    <li style="padding: 8px">Ilość segmentów v: <span id="v">3</span><br>
-      <input type="range" id="vSegments" min="1" max="10" value="3" onmousemove="setSegments()"></li>
+    <li style="padding: 8px">Ilość segmentów u: <span id="u">3</span>
+      <br>
+      <input type="range" id="uSegments" min="1" max="6" value="2" onmousemove="setSegments()">
+    </li>
+    <li style="padding: 8px">Ilość segmentów v: <span id="v">3</span>
+      <br>
+      <input type="range" id="vSegments" min="1" max="6" value="2" onmousemove="setSegments()">
+    </li>
     <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj powierzchnię</li>
     <li style="margin-top: 0px; margin-bottom: 8px">
       <input type="checkbox" id="grid" onclick="hideGrid()">Ukryj siatkę</li>
     <hr>
-    <li>Wyświetl funkcje <br>B-sklejane dla:</li>
-    <li><input type="radio" name="type" value="uKnots" onchange="change()" checked>węzłów U</li>
-    <li><input type="radio" name="type" value="vKnots" onchange="change()">węzłów V</li>
+    <li>Wyświetl funkcje
+      <br>B-sklejane dla:</li>
+    <li>
+      <input type="radio" name="type" value="uKnots" onchange="showBspline()" checked>węzłów U</li>
+    <li>
+      <input type="radio" name="type" value="vKnots" onchange="showBspline()">węzłów V</li>
     <li><a href="#" onclick="window.location.reload()">Wyczyść</a></li>
   </ul>
   <div id="popup" oncontextmenu="return false;">
@@ -93,11 +100,11 @@
   <script src="../js/NURBSUtils.js"></script>
   <script src="../js/NURBSSurface.js"></script>
   <script>
-    var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane, controls;
+    var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane, plane2, controls;
     var INTERSECTED, SELECTED, req;
     var controlPoints, sprites, cols, rows, id;
     var uKnots, vKnots, uDeg, vDeg;
-    var groupPoints, groupLines;
+    var groupPoints, groupLines, groupSpline;
     var A, B, V, Vy, width, height;
 
     var factor = 0.3;
@@ -111,6 +118,9 @@
     var rand = Math.random();
     var WIDTH = document.getElementById("form").clientWidth;
     document.getElementById("form").style.width = WIDTH + "px";
+
+    var uSegments = Number(document.getElementById("uSegments").value);
+    var vSegments = Number(document.getElementById("vSegments").value);
 
     init();
     render();
@@ -167,6 +177,11 @@
       if (passed) {
         recalculateKnots();
         recalculate();
+        showBspline();
+      }
+    }
+
+    function showBspline() {
       if (document.getElementsByName("type")[0].checked) {
         drawKnots(uKnots);
         drawDeBoor(uKnots, uDeg);
@@ -174,8 +189,7 @@
         drawKnots(vKnots);
         drawDeBoor(vKnots, vDeg);
       }
-        render();
-      }
+      render();
     }
 
     function recalculate() {
@@ -186,10 +200,9 @@
       render();
     }
 
-    function recalculateKnots() {
+    function recalculateU() {
       uDeg = Number(document.getElementById("uDeg").value);
-      vDeg = Number(document.getElementById("vDeg").value);
-      uKnots = [], vKnots = [];
+      uKnots = [];
       for (var i = 0; i < uDeg + 1; i++) {
         uKnots.push(0);
       }
@@ -197,6 +210,13 @@
         var knot = (i + 1) / (cols - uDeg);
         uKnots.push(THREE.Math.clamp(knot, 0, 1));
       }
+      recalculate();
+      showBspline();
+    }
+
+    function recalculateV() {
+      vDeg = Number(document.getElementById("vDeg").value);
+      vKnots = [];
       for (var i = 0; i < vDeg + 1; i++) {
         vKnots.push(0);
       }
@@ -204,6 +224,13 @@
         var knot = (i + 1) / (rows - vDeg);
         vKnots.push(THREE.Math.clamp(knot, 0, 1));
       }
+      recalculate();
+      showBspline();
+    }
+
+    function recalculateKnots(t) {
+      recalculateU();
+      recalculateV();
     }
 
     function drawGraph() {
@@ -259,7 +286,7 @@
         console.error(err.message);
       }
       var deBoor = [],
-          lines = [];
+        lines = [];
       var s, t;
       var length = controlPoints[0].length;
       for (var i = 0; i <= length; i++) {
@@ -296,9 +323,9 @@
       var getSurfacePoint = function (u, v) {
         return nurbsSurface.getPoint(u, v);
       }
-      var uSegments = Number(document.getElementById("uSegments").value);
-      var vSegments = Number(document.getElementById("vSegments").value);
-      var nurbsGeometry = new THREE.ParametricGeometry(getSurfacePoint, vSegments * vDeg, uSegments * uDeg);
+      uSegments = Number(document.getElementById("uSegments").value);
+      vSegments = Number(document.getElementById("vSegments").value);
+      var nurbsGeometry = new THREE.ParametricGeometry(getSurfacePoint, vSegments * uKnots.length, uSegments * vKnots.length);
       var mesh = new THREE.Mesh(nurbsGeometry, material);
       surface.add(mesh);
       var mesh2 = new THREE.Mesh(nurbsGeometry, new THREE.MeshBasicMaterial({
@@ -306,6 +333,8 @@
         wireframe: true
       }));
       surface.add(mesh2);
+
+      drawSplines(nurbsSurface);
     }
 
     function drawLines() {
@@ -338,6 +367,48 @@
       }
     }
 
+    function drawSplines(nurbs) {
+      console.log("sklejane");
+      try {
+        scene.remove(groupSpline);
+      } catch (e) {
+        console.error("Error: " + e.message);
+      }
+
+      groupSpline = new THREE.Group();
+      groupSpline.name = "spline";
+      scene.add(groupSpline);
+      for (var val of uKnots) {
+        if (val != 0 && val != 1) {
+          var lineGeometry = new THREE.Geometry();
+          for (var j = 0; j <= vSegments * uKnots.length; j++) {
+            lineGeometry.vertices.push(nurbs.getPoint(j / (vSegments * uKnots.length), val));
+          }
+          var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
+            color: "red",
+            linewidth: 4,
+            depthTest: false
+          }));
+          groupSpline.add(line);
+        }
+      }
+
+      for (var val of vKnots) {
+        if (val != 0 && val != 1) {
+          var lineGeometry = new THREE.Geometry();
+          for (var j = 0; j <= uSegments * vKnots.length; j++) {
+            lineGeometry.vertices.push(nurbs.getPoint(val, j / (uSegments * vKnots.length)));
+          }
+          var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
+            color: "red",
+            linewidth: 4,
+            depthTest: false
+          }));
+          groupSpline.add(line);
+        }
+      }
+    }
+
     function createSurface() {
       resetScene();
       controlPoints = [], sprites = [];
@@ -345,8 +416,8 @@
       cols = Number(document.getElementById("kolumny").value);
       rows = Number(document.getElementById("wiersze").value);
 
-      document.getElementById("vDeg").value = rows-1;
-      document.getElementById("uDeg").value = cols-1;
+      document.getElementById("vDeg").value = rows - 1;
+      document.getElementById("uDeg").value = cols - 1;
 
       var k = 0;
       var size = window.innerHeight * 0.2;
@@ -360,7 +431,8 @@
         controlPoints[n] = [];
         for (var j = -size; j <= size + 1; j += rowStep) {
           var pMaterial = new THREE.SpriteMaterial({
-            color: "green"
+            color: "green",
+            depthTest: false
           });
           var point = new THREE.Sprite(pMaterial);
           point.scale.x = point.scale.y = 10;
@@ -374,7 +446,26 @@
         }
       }
 
-      recalculateKnots();
+      uDeg = Number(document.getElementById("uDeg").value);
+      uKnots = [];
+      for (var i = 0; i < uDeg + 1; i++) {
+        uKnots.push(0);
+      }
+      for (var i = 0; i < cols; i++) {
+        var knot = (i + 1) / (cols - uDeg);
+        uKnots.push(THREE.Math.clamp(knot, 0, 1));
+      }
+
+      vDeg = Number(document.getElementById("vDeg").value);
+      vKnots = [];
+      for (var i = 0; i < vDeg + 1; i++) {
+        vKnots.push(0);
+      }
+      for (var i = 0; i < rows; i++) {
+        var knot = (i + 1) / (rows - vDeg);
+        vKnots.push(THREE.Math.clamp(knot, 0, 1));
+      }
+
       createNURBSSurface(uDeg, vDeg);
       //laczenie puntktow kontrolnych
       drawLines();
@@ -386,6 +477,7 @@
       camera.lookAt(scene.position);
       camera2.lookAt(scene2.position);
       plane.lookAt(camera.position);
+      plane2.lookAt(camera2.position);
       if (document.getElementById("grid").checked) {
         scene.remove(scene.getObjectByName("punkty"));
         scene.remove(scene.getObjectByName('linie'));
@@ -460,7 +552,12 @@
           visible: false
         }));
       scene.add(plane);
-      scene2.add(plane);
+
+      plane2 = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        }));
+      scene2.add(plane2);
 
       group.name = "deBoor";
       scene2.add(group);
@@ -493,9 +590,11 @@
       try {
         scene.children = [];
         controlPoints = [];
+        groupSpline = [];
         groupLines = false;
         groupPoints = false;
         scene.add(plane);
+        scene2.add(plane2);
         controls.reset();
         renderer.clear();
       } catch (err) {
@@ -604,8 +703,9 @@
       mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
       raycaster.setFromCamera(mouse, camera2);
       if (SELECTED) {
+        console.log("move");
         requestAnimationFrame(render);
-        var intersects = raycaster.intersectObject(plane);
+        var intersects = raycaster.intersectObject(plane2);
         if (intersects.length > 0) {
           if (intersects[0].point.sub(offset).x > A.x && intersects[0].point.sub(offset).x < B.x) {
             SELECTED.position.x = intersects[0].point.sub(offset).x;
@@ -631,7 +731,7 @@
         if (INTERSECTED != intersects[0].object) {
           INTERSECTED = intersects[0].object;
           INTERSECTED.material.color.set("red");
-          plane.position.copy(INTERSECTED.position);
+          plane2.position.copy(INTERSECTED.position);
         }
         document.body.style.cursor = 'pointer';
       } else {
@@ -651,9 +751,9 @@
       var intersects = raycaster.intersectObjects(groupOfKnots.children);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
-        var intersect = raycaster.intersectObject(plane);
+        var intersect = raycaster.intersectObject(plane2);
         if (intersect.length > 0) {
-          offset.copy(intersect[0].point).sub(plane.position);
+          offset.copy(intersect[0].point).sub(plane2.position);
         }
         document.body.style.cursor = 'move';
       }
@@ -663,7 +763,7 @@
     function onMouseUp2(event) {
       event.preventDefault();
       if (INTERSECTED) {
-        plane.position.copy(INTERSECTED.position);
+        plane2.position.copy(INTERSECTED.position);
         SELECTED = null;
       }
       document.body.style.cursor = 'auto';
@@ -678,8 +778,8 @@
 
     function popupMouseMove(event) {
       if (isMouseDown) {
-        document.getElementById("form").style.top = Number((divH - spanH)/2+event.clientY)+"px";
-        document.getElementById("form").style.left =event.clientX+"px";
+        document.getElementById("form").style.top = Number((divH - spanH) / 2 + event.clientY) + "px";
+        document.getElementById("form").style.left = event.clientX + "px";
       }
     }
 
