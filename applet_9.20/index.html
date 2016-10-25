@@ -378,11 +378,11 @@
       groupSpline = new THREE.Group();
       groupSpline.name = "spline";
       scene.add(groupSpline);
-      for (var val of uKnots) {
-        if (val != 0 && val != 1) {
+      for (var i = 0; i < uKnots.length; i++) {
+        if (uKnots[i] != 0 && uKnots[i] != 1) {
           var lineGeometry = new THREE.Geometry();
           for (var j = 0; j <= vSegments * uKnots.length; j++) {
-            lineGeometry.vertices.push(nurbs.getPoint(j / (vSegments * uKnots.length), val));
+            lineGeometry.vertices.push(nurbs.getPoint(j / (vSegments * uKnots.length), uKnots[i]));
           }
           var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
             color: "red",
@@ -393,11 +393,11 @@
         }
       }
 
-      for (var val of vKnots) {
-        if (val != 0 && val != 1) {
+      for (var i = 0; i < vKnots.length; i++) {
+        if (vKnots[i] != 0 && vKnots[i] != 1) {
           var lineGeometry = new THREE.Geometry();
           for (var j = 0; j <= uSegments * vKnots.length; j++) {
-            lineGeometry.vertices.push(nurbs.getPoint(val, j / (uSegments * vKnots.length)));
+            lineGeometry.vertices.push(nurbs.getPoint(vKnots[i], j / (uSegments * vKnots.length)));
           }
           var line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
             color: "red",
