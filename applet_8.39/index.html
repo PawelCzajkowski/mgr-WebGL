@@ -183,6 +183,11 @@
     }
 
     function drawGraph() {
+      try {
+        scene2.remove(scene2.getObjectByName("wykres"));
+      } catch (e) {
+        console.error(e.message);
+      }
       var boxGeometry = new THREE.Geometry();
       boxGeometry.vertices.push(
         new THREE.Vector3(-width * (0.425 - 0.02), height / 2.2, 0),
@@ -211,7 +216,7 @@
       var l = Math.round(nurbsWezly.length / 2);
       for (var i = 0, j = -l; i < nurbsWezly.length; i++, j++) {
         temp = new THREE.Vector3().lerpVectors(A, B, nurbsWezly[i]);
-        var cubegeometry = new THREE.PlaneGeometry(10, 10);
+        var cubegeometry = new THREE.PlaneGeometry(12, 12);
         var material = new THREE.MeshBasicMaterial({
           color: "blue"
         });
@@ -287,7 +292,7 @@
       var vertex, point, graph;
       var group = new THREE.Group();
       var Pmaterial = new THREE.SpriteMaterial({
-        color: "#007ac1"
+        color: "mediumseagreen"
       });
       var val = document.getElementById('suwak').value;
       vertex = nurbsCurve.getPoint(val);
@@ -479,6 +484,18 @@
 
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer2.setSize(window.innerWidth * factor, window.innerHeight * factorV);
+
+      width = window.innerWidth * factor;
+      height = window.innerHeight * factorV;
+
+      A = new THREE.Vector3(-width * (0.425 - 0.02), -height / 2.8, 0);
+      B = new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0);
+      V = new THREE.Vector3().subVectors(B, A);
+
+      drawGraph();
+      drawDeBoor();
+      drawKnots();
+      drawPoints();
       render();
     }
 
