@@ -65,6 +65,7 @@
   <script src="../js/NURBSCurve.js"></script>
   <script src="../js/NURBSUtils.js"></script>
   <script>
+    /*jshint globalstrict: true*/
     "use strict";
     var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane;
     var INTERSECTED, SELECTED, temp, nurbsCurve, otoczkaGeometry;
@@ -394,7 +395,6 @@
 
 
     function init() {
-
       var container = document.createElement("div");
       document.body.appendChild(container);
       scene = new THREE.Scene();
