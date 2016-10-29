@@ -13,13 +13,13 @@
 
 <body>
   <ul id="navi">
-      <div style="margin: 8px">Klasa ciągłości:
-        <select id="ciaglosc">
-          <option value="G0">G0</option>
-          <option value="G1">G1</option>
-          <option value="C1" selected>C1</option>
-        </select>
-      </div>
+    <div style="margin: 8px">Klasa ciągłości:
+      <select id="ciaglosc" onchange="changeOption(event)">
+        <option value="G0">G0</option>
+        <option value="G1">G1</option>
+        <option value="C1" selected>C1</option>
+      </select>
+    </div>
     <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
@@ -41,7 +41,12 @@
     var offset = new THREE.Vector3();
     var prev;
 
+    var option = "C1";
     var i = -1;
+
+    function changeOption(event) {
+      option = event.target.value;
+    }
 
     function show() {
       document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
@@ -76,6 +81,9 @@
           temp.subVectors(base.position, prev);
           controlPoints[2 * i - 1].position.add(temp);
           controlPoints[2 * i].position.add(temp);
+
+          temp.subVectors(controlPoints[2 * i].position, points[i].position);
+          controlPoints[2 * i - 1].position.subVectors(points[i].position, temp);
         }
       }
       //sprawdzenie punktow kontrolnych
@@ -106,6 +114,12 @@
           temp.subVectors(base.position, prev);
           controlPoints[2 * i - 1].position.add(temp);
           controlPoints[2 * i].position.add(temp);
+
+          temp.subVectors(controlPoints[2 * i].position, points[i].position);
+          temp.normalize();
+          temp2.subVectors(points[i].position, controlPoints[2 * i - 1].position);
+          temp.multiplyScalar(temp2.length());
+          controlPoints[2 * i - 1].position.subVectors(points[i].position, temp);
         }
       }
 
@@ -117,15 +131,15 @@
           if (i % 2 == 0) {
             temp.subVectors(controlPoints[i].position, points[i / 2].position);
             temp.normalize();
-            temp2.subVectors(points[i/2].position, controlPoints[i-1].position);
+            temp2.subVectors(points[i / 2].position, controlPoints[i - 1].position);
             temp.multiplyScalar(temp2.length());
-            controlPoints[i-1].position.subVectors(points[i/2].position, temp);
+            controlPoints[i - 1].position.subVectors(points[i / 2].position, temp);
           } else {
-            temp.subVectors(controlPoints[i].position, points[(i+1) / 2].position);
+            temp.subVectors(controlPoints[i].position, points[(i + 1) / 2].position);
             temp.normalize();
-            temp2.subVectors(points[(i+1)/2].position, controlPoints[i+1].position);
+            temp2.subVectors(points[(i + 1) / 2].position, controlPoints[i + 1].position);
             temp.multiplyScalar(temp2.length());
-            controlPoints[i+1].position.subVectors(points[(i+1)/2].position, temp);
+            controlPoints[i + 1].position.subVectors(points[(i + 1) / 2].position, temp);
           }
         }
       }
@@ -341,22 +355,20 @@
           var intersects = raycaster.intersectObject(plane);
           if (intersects.length > 0) {
             SELECTED.position.copy(intersects[0].point.sub(offset));
-
             if (prev == null) {
               prev = SELECTED.position;
             }
-            GoB.children = [];
-            var e = document.getElementById("ciaglosc");
-            var option = e.options[e.selectedIndex].value;
+
             if (option === "G1") {
               przeliczPunktyG1(SELECTED);
             } else if (option === "C1") {
               przeliczPunktyC1(SELECTED);
             }
-            prev = SELECTED.position.clone();
+            GoB.children = [];
             GoC.children = [];
             drawBezier(geometries);
           }
+          prev = SELECTED.position.clone();
           return;
         }
 
