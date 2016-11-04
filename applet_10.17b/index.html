@@ -1,0 +1,313 @@
+<!--  @author Paweł Czajkowski
+      Copyrights © 2016 All rights reserved.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Applet 10.17a</title>
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
+  <style>
+    input[type="range"] {
+      width: 100%;
+    }
+
+    input[type="color"] {
+      height: 50px;
+      width: 50px;
+    }
+
+    #indicator {
+      display: block;
+      visibility: visible;
+      padding: 3px;
+      position: fixed;
+      background-color: #f1f1f1;
+      border-color: black;
+      border-width: 1px;
+      border-style: solid;
+      z-index: 2;
+    }
+
+    .color {
+      display: inline-block;
+      margin: 10px;
+    }
+/*
+
+    .choose {
+      padding: 10px;
+      display: inline-flex;
+      width: 40%;
+    }
+*/
+  </style>
+</head>
+
+<body>
+  <div id="indicator"></div>
+  <ul id="navi">
+<!--
+    <div class="choose">
+      <input type="radio" name="geometry" value="sphere" onchange="redraw()" checked> Kula
+    </div>
+    <div class="choose">
+      <input type="radio" name="geometry" value="circle" onchange="redraw()"> Koło<br>
+    </div>
+-->
+    <li style="margin: 5px">Współczynnik odbicia światła otoczenia<br>
+      <input type="range" id="ambientIntensity" min="0" max="1" step="0.01" value="0.5" onmousemove="redraw(this.id)"></li>
+    <li style="margin: 5px">Kolor światła otoczenia<br>
+      <input type="color" id="ambient" value="#ffffff" onchange="changeColor(this.id)">
+      <div class="color ambient">
+        R <input id="r" type="number" min="0" max="255" step="1" onchange="colorRGB('ambient')"><br>
+        G <input id="g" type="number" min="0" max="255" step="1" onchange="colorRGB('ambient')"><br>
+        B <input id="b" type="number" min="0" max="255" step="1" onchange="colorRGB('ambient')"><br>
+      </div>
+      <div class="color ambient">
+        H <input id="h" type="number" min="0" max="360" step="1" onchange="colorHSV('ambient')"><br>
+        S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('ambient')"><br>
+        V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('ambient')"><br>
+      </div>
+    </li>
+    <li style="margin: 5px">Kolor obiektu<br>
+      <input type="color" id="material" value="#b40864" onchange="changeColor(this.id)">
+        <div class="color material">
+        R <input id="r" type="number" min="0" max="255" step="1" onchange="colorRGB('material')"><br>
+        G <input id="g" type="number" min="0" max="255" step="1" onchange="colorRGB('material')"><br>
+        B <input id="b" type="number" min="0" max="255" step="1" onchange="colorRGB('material')"><br>
+      </div>
+      <div class="color material">
+        H <input id="h" type="number" min="0" max="360" step="1" onchange="colorHSV('material')"><br>
+        S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('material')"><br>
+        V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('material')"><br>
+      </div>
+    </li>
+    <li style="margin: 5px">Kolor tła<br>
+      <input type="color" id="background" value="#000000" onchange="changeColor(this.id)">
+          <div class="color background">
+        R <input id="r" type="number" min="0" max="255" step="1" onchange="colorRGB('background')"><br>
+        G <input id="g" type="number" min="0" max="255" step="1" onchange="colorRGB('background')"><br>
+        B <input id="b" type="number" min="0" max="255" step="1" onchange="colorRGB('background')"><br>
+      </div>
+      <div class="color background">
+        H <input id="h" type="number" min="0" max="360" step="1" onchange="colorHSV('background')"><br>
+        S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('background')"><br>
+        V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('background')"><br>
+      </div>
+    </li>
+    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
+  </ul>
+  <script src="../js/tinycolor.js"></script>
+  <script src="../js/three.min.js"></script>
+  <script src="../js/CanvasRenderer.js"></script>
+  <script src="../js/Projector.js"></script>
+  <script src="../js/math.js"></script>
+  <script type="x-shader/x-vertex" id="vertexShader">
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+  </script>
+  <script type="x-shader/x-fragment" id="fragmentShader">
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    uniform vec3 color;
+
+    uniform vec3 ambientColor;
+    uniform float ambientIntensity;
+
+    void main() {
+      vec4 addedLights = vec4(0.0,0.0,0.0, 1.0);
+
+        addedLights.rgb += ambientColor * ambientIntensity ;
+      gl_FragColor = vec4(color * addedLights.rgb, 1.0);
+      }
+  </script>
+  <script>
+    var raycaster, scene, camera, renderer, plane, sphereMaterial, sphere, circle;
+    var PUSHED, color;
+
+    init();
+    changeColor("ambient");
+    changeColor("material");
+    changeColor("background");
+    render();
+
+    function colorRGB(name) {
+      var r = document.getElementsByClassName(name)[0].children[0].value;
+      var g = document.getElementsByClassName(name)[0].children[2].value;
+      var b = document.getElementsByClassName(name)[0].children[4].value;
+
+      var tcolor = new tinycolor({r: r, g: g, b: b});
+      document.getElementById(name).value = "#"+tcolor.toHex();
+
+      var hsv = tcolor.toHsv();
+      document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
+      document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
+      document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
+
+      redraw();
+    }
+
+    function colorHSV(name) {
+      var h = document.getElementsByClassName(name)[1].children[0].value;
+      var s = document.getElementsByClassName(name)[1].children[2].value;
+      var v = document.getElementsByClassName(name)[1].children[4].value;
+
+      var tcolor = new tinycolor({h: h, s: s, v: v});
+      document.getElementById(name).value = "#"+tcolor.toHex();
+
+      var rgb = tcolor.toRgb();
+      document.getElementsByClassName(name)[0].children[0].value = rgb.r;
+      document.getElementsByClassName(name)[0].children[2].value = rgb.g;
+      document.getElementsByClassName(name)[0].children[4].value = rgb.b;
+
+      redraw();
+    }
+
+    function changeColor(name) {
+      var tcolor = new tinycolor(document.getElementById(name).value.toString());
+
+      document.getElementsByClassName(name)[0].children[0].value = tcolor._r;
+      document.getElementsByClassName(name)[0].children[2].value = tcolor._g;
+      document.getElementsByClassName(name)[0].children[4].value = tcolor._b;
+
+      var hsv = tcolor.toHsv();
+      document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
+      document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
+      document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
+
+      redraw();
+    }
+
+    function redraw(id) {
+      sphereMaterial.uniforms.ambientIntensity.value = document.getElementById("ambientIntensity").value;
+      color = document.getElementById("ambient").value;
+      sphereMaterial.uniforms.ambientColor.value = new THREE.Color(color.toString());
+      color = document.getElementById("material").value;
+      sphereMaterial.uniforms.color.value = new THREE.Color(color.toString());
+      color = document.getElementById("background").value;
+      renderer.setClearColor(color.toString());
+//      if(document.getElementsByName("geometry")[0].checked) {
+//        circle.visible = false;
+//        sphere.visible = true;
+//      } else {
+//        circle.visible = true;
+//        sphere.visible = false;
+//      }
+
+      try {
+        document.getElementById("indicator").innerHTML = document.getElementById(id).value;
+      } catch (e) {
+        console.log(e.message);
+      }
+
+
+      if (PUSHED) {
+        document.getElementById("indicator").style.visibility = "visible";
+      } else {
+        document.getElementById("indicator").style.visibility = "hidden";
+      }
+      render();
+    }
+
+    function render() {
+      renderer.render(scene, camera);
+    }
+
+    function webglAvailable() {
+      try {
+        var canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (
+          canvas.getContext('webgl') ||
+          canvas.getContext('experimental-webgl')));
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function init() {
+      container = document.createElement("div");
+      document.body.appendChild(container);
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 500;
+
+      if (webglAvailable()) {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          preserveDrawingBuffer: true
+        });
+      } else {
+        alert("Twoja przeglądarka nie obsługuje WebGL!");
+      }
+      renderer.setClearColor("black");
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        })
+      );
+      scene.add(plane);
+
+      //kula
+      uniforms = {
+        color: {type: "c", value: new THREE.Color( "#b40864" )},
+        ambientColor: {type: "c", value: new THREE.Color( "#ffffff" )},
+        ambientIntensity: {type: "f", value: 0.5},
+      }
+      var sphereGeometry = new THREE.SphereGeometry(100, 32, 32);
+      sphereMaterial = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: document.getElementById("vertexShader").text,
+        fragmentShader: document.getElementById("fragmentShader").text,
+      });
+      sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      scene.add(sphere);
+
+      //kolo
+      var circleGeometry = new THREE.CircleGeometry(100, 32);
+      circle = new THREE.Mesh(circleGeometry, sphereMaterial);
+      circle.visible = false;
+      scene.add(circle);
+
+      window.addEventListener("resize", onResize, false);
+      var el = document.getElementById("ambientIntensity");
+        el.addEventListener("mousemove", moveRect, false );
+        el.addEventListener("mousedown", function(){PUSHED = true;}, false );
+        el.addEventListener("mouseup", function(){PUSHED = false; redraw();}, false );
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      render();
+    }
+
+    function moveRect(event) {
+      var width = document.getElementById("indicator").offsetWidth;
+      var height = document.getElementById("indicator").offsetHeight;
+
+      document.getElementById("indicator").style.marginLeft = -width - 4 + event.clientX+"px";
+      document.getElementById("indicator").style.marginTop = (event.clientY - height - 10)+"px";
+      redraw();
+    }
+  </script>
+</body>
+
+</html>
