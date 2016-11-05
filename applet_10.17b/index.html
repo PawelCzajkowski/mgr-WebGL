@@ -35,28 +35,24 @@
       display: inline-block;
       margin: 10px;
     }
-/*
 
     .choose {
       padding: 10px;
       display: inline-flex;
       width: 40%;
     }
-*/
   </style>
 </head>
 
 <body>
   <div id="indicator"></div>
   <ul id="navi">
-<!--
     <div class="choose">
       <input type="radio" name="geometry" value="sphere" onchange="redraw()" checked> Kula
     </div>
     <div class="choose">
       <input type="radio" name="geometry" value="circle" onchange="redraw()"> Koło<br>
     </div>
--->
     <li style="margin: 5px">Współczynnik odbicia światła otoczenia<br>
       <input type="range" id="ambientIntensity" min="0" max="1" step="0.01" value="0.5" onmousemove="redraw(this.id)"></li>
     <li style="margin: 5px">Kolor światła otoczenia<br>
@@ -196,13 +192,13 @@
       sphereMaterial.uniforms.color.value = new THREE.Color(color.toString());
       color = document.getElementById("background").value;
       renderer.setClearColor(color.toString());
-//      if(document.getElementsByName("geometry")[0].checked) {
-//        circle.visible = false;
-//        sphere.visible = true;
-//      } else {
-//        circle.visible = true;
-//        sphere.visible = false;
-//      }
+      if(document.getElementsByName("geometry")[0].checked) {
+        circle.visible = false;
+        sphere.visible = true;
+      } else {
+        circle.visible = true;
+        sphere.visible = false;
+      }
 
       try {
         document.getElementById("indicator").innerHTML = document.getElementById(id).value;
