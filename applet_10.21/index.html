@@ -18,7 +18,7 @@
     <li style="margin: 5 10 0 0">
       <input type="checkbox" id="clearBuffer" onclick="redraw()" checked>Czyszczenie z-buffora</li>
     <li style="margin: 5 10 0 0">
-      <input type="checkbox" id="light" onclick="redraw()" checked>Oświetlenie</li>
+      <input type="checkbox" id="light" onclick="redraw()">Oświetlenie</li>
   </div>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
@@ -56,7 +56,7 @@
         renderer.autoClearDepth = false;
       }
 
-      if (document.getElementById("light").checked) {
+      if (!document.getElementById("light").checked) {
         scene.add(ambientLight);
       } else {
         try {
