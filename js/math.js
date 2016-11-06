@@ -103,8 +103,10 @@ function wymiernyDeCasteljau(punkty, u, wagi) {
 }
 
 // Wyznaczenie krzywizny na podstawie algorytmu de Casteljau
-function wyznaczKrzywizne(curve, ctrlPoint, count, deg) {
+function wyznaczKrzywizne(curve, ctrlPoint, count, deg, offset, number) {
   var rGeometry = new THREE.Geometry();
+  if (offset == undefined) offset = 0;
+  if (number == undefined) number = 1;
   for (var i = 0; i <= count; i++) {
     var u = i / count;
 
@@ -124,7 +126,7 @@ function wyznaczKrzywizne(curve, ctrlPoint, count, deg) {
 
     var curv = (p1.x * p2.y - p1.y * p2.x) / Math.sqrt(Math.pow(p1.length(), 3));
 
-    var temp = curve.getPoint(u);
+    var temp = curve.getPoint(i / (count * number) + offset / number);
     rGeometry.vertices.push(new THREE.Vector3(temp.x, temp.y));
     var temp2 = new THREE.Vector3();
     temp2.x = temp.x + p1.y * curv / p1.length();
@@ -229,13 +231,15 @@ function wyswietlOtoczke(controlPoints, degree) {
 }
 
 //algorytm Boehma do wyznaczania otoczki wypuklej
-function boehmAlgoritm(nurbs) {
+function boehmAlgoritm(nurbs, draw) {
   try {
-    scene.remove(scene.getObjectByName('otoczka'));
+    scene.remove(scene.getObjectByName("otoczka"));
     group = [];
   } catch (e) {
     console.log(e.message);
   }
+
+  if (draw === undefined) draw = true;
 
   var geometry, mesh, arr;
   var processed = [],
@@ -243,6 +247,7 @@ function boehmAlgoritm(nurbs) {
   var d = [];
   var A, B, C, D;
   var temp = new THREE.Vector3();
+
   var group = new THREE.Group();
   group.name = "otoczka";
   scene.add(group);
@@ -258,13 +263,21 @@ function boehmAlgoritm(nurbs) {
     transparent: true,
   });
   if (nurbs.degree == 2) {
-    geometry = new THREE.Geometry();
     if (nurbs.controlPoints.length == 3) {
+      geometry = new THREE.Geometry();
       for (var i = 0; i < 3; i++) {
         nurbs.controlPoints[i].z = -10;
         geometry.vertices.push(nurbs.controlPoints[i]);
       }
+      for (var j = 0; j < 3; j++) {
+        geometry.vertices[j].z = -10;
+      }
       geometry.faces.push(new THREE.Face3(0, 1, 2));
+      mesh = new THREE.Mesh(geometry, material);
+      if (!draw) {
+        mesh.visible = false;
+      }
+      group.add(mesh);
     } else if (nurbs.controlPoints.length > 3) {
       //wyznaczenie wierzcholkow Beziera
       for (var i = 1; i <= nurbs.controlPoints.length - 3; i++) {
@@ -277,20 +290,44 @@ function boehmAlgoritm(nurbs) {
       }
 
       //definiowanie geometrii
-      geometry.vertices.push(nurbs.controlPoints[0], nurbs.controlPoints[1]);
-      for (var i = 0; i < processed.length; i++) {
-        geometry.vertices.push(processed[i], nurbs.controlPoints[i + 2]);
-        geometry.faces.push(new THREE.Face3(2 * i, 2 * i + 1, 2 * i + 2));
+      geometry = new THREE.Geometry();
+      geometry.vertices.push(nurbs.controlPoints[0], nurbs.controlPoints[1], processed[0]);
+      for (var j = 0; j < 3; j++) {
+        geometry.vertices[j].z = -10;
       }
+      geometry.faces.push(new THREE.Face3(0, 1, 2));
+      mesh = new THREE.Mesh(geometry, material);
+      if (!draw) {
+        mesh.visible = false;
+      }
+      group.add(mesh);
+      for (var i = 0; i < processed.length - 1; i++) {
+        geometry = new THREE.Geometry();
+        geometry.vertices.push(processed[i], nurbs.controlPoints[i + 2], processed[i + 1]);
+        for (var j = 0; j < 3; j++) {
+          geometry.vertices[j].z = -10;
+        }
+        geometry.faces.push(new THREE.Face3(0, 1, 2));
+        mesh = new THREE.Mesh(geometry, material);
+        if (!draw) {
+          mesh.visible = false;
+        }
+        group.add(mesh);
+      }
+      geometry = new THREE.Geometry();
+      geometry.vertices.push(processed[processed.length - 1]);
+      geometry.vertices.push(nurbs.controlPoints[nurbs.controlPoints.length - 2]);
       geometry.vertices.push(nurbs.controlPoints[nurbs.controlPoints.length - 1]);
-      var l = geometry.vertices.length - 1;
-      geometry.faces.push(new THREE.Face3(l - 2, l - 1, l));
-      for (var i = 0; i <= l; i++) {
-        geometry.vertices[i].z = -10;
+      for (var j = 0; j < 3; j++) {
+        geometry.vertices[j].z = -10;
       }
+      geometry.faces.push(new THREE.Face3(0, 1, 2));
+      mesh = new THREE.Mesh(geometry, material);
+      if (!draw) {
+        mesh.visible = false;
+      }
+      group.add(mesh);
     }
-    mesh = new THREE.Mesh(geometry, material);
-    group.add(mesh);
   } else if (nurbs.degree == 3) {
     geometry = new THREE.Geometry();
     if (nurbs.controlPoints.length == 4) {
@@ -298,15 +335,20 @@ function boehmAlgoritm(nurbs) {
         nurbs.controlPoints[i].z = -10;
         geometry.vertices.push(nurbs.controlPoints[i]);
       }
-      var otoczka = wyznaczOtoczke(geometry.vertices);
-      for (var i = 0; i < otoczka.length; i++) {
-        geometry.vertices[i] = otoczka[i];
-        if (i < otoczka.length - 2)
-          geometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
+      if (draw) {
+        var otoczka = wyznaczOtoczke(geometry.vertices);
+        for (var i = 0; i < otoczka.length; i++) {
+          geometry.vertices[i] = otoczka[i];
+          if (i < otoczka.length - 2)
+            geometry.faces.push(new THREE.Face3(0, i + 1, i + 2));
+        }
       }
 
       //rysowanie otoczki
       mesh = new THREE.Mesh(geometry, material);
+      if (!draw) {
+        mesh.visible = false;
+      }
       group.add(mesh);
     } else if (nurbs.controlPoints.length > 4) {
       for (var i = 1; i < nurbs.controlPoints.length - 2; i++) {
@@ -345,14 +387,19 @@ function boehmAlgoritm(nurbs) {
         if (i % 3 === 0 && i !== 0) {
           arr = new THREE.Geometry();
           arr.vertices.push(geometry.vertices[i - 3], geometry.vertices[i - 2], geometry.vertices[i - 1], geometry.vertices[i]);
-          var otoczka = wyznaczOtoczke(arr.vertices);
-          for (var j = 0; j < otoczka.length; j++) {
-            arr.vertices[j] = otoczka[j];
-            if (j < otoczka.length - 2)
-              arr.faces.push(new THREE.Face3(0, j + 1, j + 2));
+          if (draw) {
+            var otoczka = wyznaczOtoczke(arr.vertices);
+            for (var j = 0; j < otoczka.length; j++) {
+              arr.vertices[j] = otoczka[j];
+              if (j < otoczka.length - 2)
+                arr.faces.push(new THREE.Face3(0, j + 1, j + 2));
+            }
           }
           //rysowanie otoczki
           mesh = new THREE.Mesh(arr, material);
+          if (!draw) {
+            mesh.visible = false;
+          }
           group.add(mesh);
         }
       }
