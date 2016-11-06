@@ -1,0 +1,335 @@
+<!--  @author Paweł Czajkowski
+      Copyrights © 2016 All rights reserved.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Applet 8.25_nowy</title>
+  <link rel="stylesheet" type="text/css" href="../css/main.css">
+</head>
+
+<body>
+
+  <ul id="navi">
+    <li style="margin: 10px">Stopień krzywej: <span id="stopien_krzywej">0</span></li>
+    <li style="margin: 10">
+      <input type="checkbox" id="edit">Edytuj krzywą</li>
+    <li>
+      <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
+  </ul>
+  <div class="suwak">Przesunięcie punktu
+    <input style="width: 98%" type='range' id='suwak' min="0" max="1" step="0.01" value="0" onmousemove="draw_deCasteljau()" onclick="draw_deCasteljau()">
+  </div>
+  <script src="../js/three.min.js"></script>
+  <script src="../js/math.js"></script>
+  <script src="../js/CanvasRenderer.js"></script>
+  <script src="../js/Projector.js"></script>
+  <script>
+    "use strict";
+    var raycaster, scene, camera, renderer, plane;
+    var INTERSECTED, SELECTED, temp;
+    var points = [],
+      GoL;
+    var geometry, positions, lines, bezier, Cgeometry;
+    var isWebGL;
+
+    var MAX_POINTS = 21;
+    var idx = 0;
+    var drawCount = 0;
+
+    var mouse = new THREE.Vector2();
+    var offset = new THREE.Vector3();
+    var group = new THREE.Group();
+
+    init();
+    render();
+
+    function copyPoints(points, size) {
+      var result = [];
+      for (var i = 0; i < size; i++) {
+        result.push(new THREE.Vector3(points[i].position.x, points[i].position.y, points[i].position.z));
+      }
+      return result;
+    }
+
+    function draw_deCasteljau() {
+      var val = document.getElementById('suwak').value;
+      try {
+        group.children = [];
+      } catch (e) {
+        console.error(e.message)
+      };
+      var dGeometry = copyPoints(points, points.length);
+      if (points.length >= 3) {
+        algorytm_dC(dGeometry, dGeometry.length-1, val);
+      }
+      render();
+    }
+
+    function algorytm_dC(Arr, deg, val) {
+      var n = Arr.length;
+      var newGeometry = new THREE.Geometry();
+      if (n > 1) {
+        for (var i = 1; i < n; ++i) {
+          var c = new THREE.Vector3();
+          c.subVectors(Arr[i], Arr[i - 1]);
+          c.multiplyScalar(val);
+          c.add(Arr[i - 1]);
+          newGeometry.vertices.push(c);
+        }
+        var lines = new THREE.Line(newGeometry, new THREE.LineBasicMaterial({
+          color: "blue"
+        }));
+        lines.name = "pomocnicze";
+        group.add(lines);
+        if (newGeometry.vertices.length == 1) {
+          drawPoint(newGeometry.vertices[0]);
+          render();
+          return new THREE.Vector3(newGeometry.vertices[0]);
+        }
+      algorytm_dC(newGeometry.vertices, newGeometry.vertices.length-1, val);
+      }
+      return;
+    }
+
+    function drawPoint(position) {
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "red"
+      });
+      var point = new THREE.Sprite(pMaterial);
+      point.position.x = position.x;
+      point.position.y = position.y;
+      point.scale.x = point.scale.y = 10;
+      group.add(point);
+    }
+
+    function drawBezier(n, vertices) {
+      bezier = new BezierCurve(n, vertices);
+      var Cpath = new THREE.Path(bezier.getPoints(10 * n));
+      Cgeometry = Cpath.createPointsGeometry(10 * n);
+      var Cmaterial = new THREE.LineBasicMaterial({
+        color: "red"
+      });
+      var curveObject = new THREE.Line(Cgeometry, Cmaterial);
+      curveObject.name = 'Bezier';
+      scene.add(curveObject);
+      if (document.getElementsByName("krzywizna").checked) {
+        scene.remove(scene.getObjectByName("krzywizna"));
+        drawCurvature(bezier);
+      }
+    }
+
+    function addPoint(Px, Py) {
+      var pMaterial = new THREE.SpriteMaterial({
+        color: "green"
+      });
+      var point = new THREE.Sprite(pMaterial);
+      point.scale.x = point.scale.y = 10;
+      point.position.x = Px;
+      point.position.y = Py;
+      scene.add(point);
+      points.push(point);
+      document.getElementById("stopien_krzywej").innerHTML = points.length - 1;
+
+      var vertex = geometry.attributes.position.array;
+      vertex[idx++] = Px;
+      vertex[idx++] = Py;
+      vertex[idx++] = 0;
+      geometry.attributes.position.needsUpdate = true;
+      if (isWebGL) {
+        geometry.setDrawRange(0, ++drawCount);
+        GoL.add(lines);
+      } else {
+        scene.remove(scene.getObjectByName("Linia"));
+        lines.vertices.push(new THREE.Vector3(vertex[drawCount * 3], vertex[drawCount * 3 + 1], 0));
+        var line = new THREE.Line(lines, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
+        GoL.add(line);
+        ++drawCount;
+      }
+      if (drawCount >= 2) {
+        try {
+          scene.remove(scene.getObjectByName('Bezier'));
+        } catch (e) {
+          console.error(e.message)
+        };
+        drawBezier(drawCount - 1, geometry.attributes);
+        draw_deCasteljau();
+      }
+    }
+
+    function render() {
+      camera.lookAt(scene.position);
+      renderer.render(scene, camera);
+    }
+
+    function initGeometryAndLine() {
+      geometry = new THREE.BufferGeometry();
+      positions = new Float32Array(MAX_POINTS * 3); //trzy wspolrzedne na wierzcholek
+      geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      if (isWebGL) {
+        lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
+          color: "black"
+        }));
+      } else {
+        lines = new THREE.Geometry();
+      }
+    }
+
+    function webglAvailable() {
+      try {
+        var canvas = document.createElement('canvas');
+        isWebGL = !!(window.WebGLRenderingContext && (
+          canvas.getContext('webgl') ||
+          canvas.getContext('experimental-webgl')));
+        return isWebGL;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function init() {
+      var container = document.createElement("div");
+      document.body.appendChild(container);
+      scene = new THREE.Scene();
+      GoL = new THREE.Group();
+      GoL.name = "Linia";
+      scene.add(GoL);
+      camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000);
+      camera.position.z = 100;
+
+      if (webglAvailable()) {
+        renderer = new THREE.WebGLRenderer({
+          antialias: true
+        });
+      } else {
+        renderer = new THREE.CanvasRenderer();
+      }
+      renderer.setClearColor("white");
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      raycaster = new THREE.Raycaster();
+
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+        new THREE.MeshBasicMaterial({
+          visible: false
+        })
+      );
+      scene.add(plane);
+
+      group.name = "pomocnicze";
+      scene.add(group);
+
+      initGeometryAndLine();
+
+      window.addEventListener("resize", onResize, false);
+      renderer.domElement.addEventListener("mousemove", onMove, false);
+      renderer.domElement.addEventListener("click", onClick, false);
+      renderer.domElement.addEventListener("mousedown", onMouseDown, false);
+      renderer.domElement.addEventListener("mouseup", onMouseUp, false);
+    }
+
+    function onResize() {
+      camera.left = window.innerWidth / -2;
+      camera.right = window.innerWidth / 2;
+      camera.top = window.innerHeight / 2;
+      camera.down = window.innerWidth / -2;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      render();
+    }
+
+    function onMove(event) {
+      if (document.getElementById("edit").checked) {
+        event.preventDefault();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        if (SELECTED) {
+          requestAnimationFrame(render);
+          var intersects = raycaster.intersectObject(plane);
+          if (intersects.length > 0) {
+            SELECTED.position.copy(intersects[0].point.sub(offset));
+            var i = points.indexOf(SELECTED);
+            var vertex = geometry.attributes.position.array;
+            vertex[i * 3] = SELECTED.position.x;
+            vertex[i * 3 + 1] = SELECTED.position.y;
+            geometry.attributes.position.needsUpdate = true;
+            if (!isWebGL) {
+              lines.vertices[i].x = SELECTED.position.x;
+              lines.vertices[i].y = SELECTED.position.y;
+              lines.verticesNeedUpdate = true;
+            }
+            scene.remove(scene.getObjectByName('Bezier'));
+            drawBezier(drawCount - 1, geometry.attributes);
+            draw_deCasteljau();
+          }
+          return;
+        }
+
+        var intersects = raycaster.intersectObjects(points);
+        if (intersects.length > 0) {
+          //pierwszy element w tablicy intersects jest pierwszym trafionym(najwyzszym)
+          if (INTERSECTED != intersects[0].object) {
+            INTERSECTED = intersects[0].object;
+            temp = INTERSECTED.material.color.getHex();
+            INTERSECTED.material.color.set("red");
+            plane.position.copy(INTERSECTED.position);
+          }
+          document.body.style.cursor = 'pointer';
+        } else {
+          if (INTERSECTED) INTERSECTED.material.color.setHex(temp);
+          INTERSECTED = null;
+          document.body.style.cursor = 'auto';
+        }
+        render();
+      }
+    }
+
+    function onClick(event) {
+      mouse.x = event.clientX - window.innerWidth / 2;
+      mouse.y = -(event.clientY - window.innerHeight / 2);
+      var edit = document.getElementById("edit").checked;
+      if (MAX_POINTS > drawCount && !edit) {
+        addPoint(mouse.x, mouse.y);
+        render();
+      }
+    }
+
+    function onMouseDown(event) {
+      event.preventDefault();
+      raycaster.setFromCamera(mouse, camera);
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      var intersects = raycaster.intersectObjects(points);
+      if (intersects.length > 0) {
+        SELECTED = intersects[0].object;
+        var intersect = raycaster.intersectObject(plane);
+        if (intersect.length > 0) {
+          offset.copy(intersect[0].point).sub(plane.position);
+        }
+        document.body.style.cursor = 'move';
+      }
+      render();
+    }
+
+    function onMouseUp(event) {
+      event.preventDefault();
+      if (INTERSECTED) {
+        plane.position.copy(INTERSECTED.position);
+        SELECTED = null;
+      }
+      document.body.style.cursor = 'auto';
+    }
+  </script>
+</body>
+
+</html>
