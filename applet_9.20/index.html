@@ -420,7 +420,7 @@
       document.getElementById("uDeg").value = cols - 1;
 
       var k = 0;
-      var size = window.innerHeight * 0.2;
+      var size = window.innerHeight * 0.4;
       var rowStep = 2 * size / (cols - 1);
       var colStep = 2 * size / (rows - 1);
 
@@ -429,7 +429,7 @@
       scene.add(groupPoints);
       for (var i = -size, n = 0; i <= size + 1; i += colStep, n++) {
         controlPoints[n] = [];
-        for (var j = -size; j <= size + 1; j += rowStep) {
+        for (var j = -size - size*0.6; j <= size - size*0.6 + 1; j += rowStep) {
           var pMaterial = new THREE.SpriteMaterial({
             color: "green",
             depthTest: false
