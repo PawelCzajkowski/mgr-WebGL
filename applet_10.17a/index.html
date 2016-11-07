@@ -14,6 +14,15 @@
       width: 90%;
     }
 
+    input[type="color"] {
+      height: 50px;
+      width: 50px;
+    }
+
+    #hex {
+      display: inline;
+    }
+
     #indicator {
       display: block;
       visibility: visible;
@@ -24,6 +33,11 @@
       border-width: 1px;
       border-style: solid;
       z-index: 2;
+    }
+
+    .color {
+      display: inline-block;
+      margin: 10px;
     }
 
     .choose {
@@ -51,8 +65,23 @@
       <input type="range" id="specular" min="0" max="1" step="0.01" value="0.5" onmousemove="redraw(this.id)"></li>
     <li style="margin: 5px">Stopień połysku powierzchni<br>
       <input type="range" id="shininess" min="1" max="256" step="1" value="32" onmousemove="redraw(this.id)"></li>
-    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
+    <li style="margin: 5px">Kolor obiektu<br>
+      <input type="color" id="material" value="#b40864" onchange="changeColor(this.id)">
+        <div class="color material">
+        R <input id="r" type="number" min="0" max="255" step="1" onchange="colorRGB('material')"><br>
+        G <input id="g" type="number" min="0" max="255" step="1" onchange="colorRGB('material')"><br>
+        B <input id="b" type="number" min="0" max="255" step="1" onchange="colorRGB('material')"><br>
+      </div>
+      <div class="color material">
+        H <input id="h" type="number" min="0" max="360" step="1" onchange="colorHSV('material')"><br>
+        S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('material')"><br>
+        V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('material')"><br>
+      </div>
+      <div>Hex: <input class="color material" maxlength="7" id="hex" type="text" onchange="colorHex('material')"></div>
+    </li>
+    <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
+  <script src="../js/tinycolor.js"></script>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
   <script src="../js/Projector.js"></script>
@@ -111,13 +140,90 @@
     var temp = new THREE.Vector3();
 
     init();
+    changeColor("material");
     render();
+
+    function colorRGB(name) {
+      var r = document.getElementsByClassName(name)[0].children[0].value;
+      var g = document.getElementsByClassName(name)[0].children[2].value;
+      var b = document.getElementsByClassName(name)[0].children[4].value;
+
+      var tcolor = new tinycolor({r: r, g: g, b: b});
+      document.getElementById(name).value = "#"+tcolor.toHex();
+
+      document.getElementsByClassName(name)[2].value = "#"+tcolor.toHex();
+
+      var hsv = tcolor.toHsv();
+      document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
+      document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
+      document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
+
+      redraw();
+    }
+
+    function colorHSV(name) {
+      var h = document.getElementsByClassName(name)[1].children[0].value;
+      var s = document.getElementsByClassName(name)[1].children[2].value;
+      var v = document.getElementsByClassName(name)[1].children[4].value;
+
+      var tcolor = new tinycolor({h: h, s: s, v: v});
+      document.getElementById(name).value = "#"+tcolor.toHex();
+
+      document.getElementsByClassName(name)[2].value = "#"+tcolor.toHex();
+
+      var rgb = tcolor.toRgb();
+      document.getElementsByClassName(name)[0].children[0].value = rgb.r;
+      document.getElementsByClassName(name)[0].children[2].value = rgb.g;
+      document.getElementsByClassName(name)[0].children[4].value = rgb.b;
+
+      redraw();
+    }
+
+    function colorHex(name) {
+      var tcolor = new tinycolor(document.getElementsByClassName(name)[2].value);
+      if(!tcolor.isValid()) {
+        alert("Niepoprawny format!");
+        return false;
+      }
+
+      document.getElementById(name).value = tcolor;
+
+      document.getElementsByClassName(name)[0].children[0].value = tcolor._r;
+      document.getElementsByClassName(name)[0].children[2].value = tcolor._g;
+      document.getElementsByClassName(name)[0].children[4].value = tcolor._b;
+
+      var hsv = tcolor.toHsv();
+      document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
+      document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
+      document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
+
+      redraw();
+    }
+
+    function changeColor(name) {
+      var tcolor = new tinycolor(document.getElementById(name).value.toString());
+
+      document.getElementsByClassName(name)[0].children[0].value = tcolor._r;
+      document.getElementsByClassName(name)[0].children[2].value = tcolor._g;
+      document.getElementsByClassName(name)[0].children[4].value = tcolor._b;
+
+      var hsv = tcolor.toHsv();
+      document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
+      document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
+      document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
+
+      document.getElementsByClassName(name)[2].value = tcolor._originalInput;
+
+      redraw();
+    }
 
     function redraw(id) {
       sphereMaterial.uniforms.ambientIntensity.value = document.getElementById("ambient").value;
       sphereMaterial.uniforms.diffuse.value = document.getElementById("diffuse").value;
       sphereMaterial.uniforms.specularFactor.value = document.getElementById("specular").value;
       sphereMaterial.uniforms.shininess.value = document.getElementById("shininess").value;
+      color = document.getElementById("material").value;
+      sphereMaterial.uniforms.color.value = new THREE.Color(color.toString());
 
       if(document.getElementsByName("geometry")[0].checked) {
         circle.visible = false;
