@@ -11,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   <style>
     input[type="range"] {
-      width: 100%;
+      width: 90%;
     }
 
     #indicator {
@@ -103,7 +103,7 @@
   </script>
   <script>
     var raycaster, scene, camera, renderer, plane, light, sphereMaterial, sphere, circle;
-    var INTERSECTED, SELECTED, PUSHED;
+    var INTERSECTED, SELECTED, PUSHED = false;
     var r = 150;
 
     var mouse = new THREE.Vector2();
@@ -114,7 +114,6 @@
     render();
 
     function redraw(id) {
-      console.log(PUSHED);
       sphereMaterial.uniforms.ambientIntensity.value = document.getElementById("ambient").value;
       sphereMaterial.uniforms.diffuse.value = document.getElementById("diffuse").value;
       sphereMaterial.uniforms.specularFactor.value = document.getElementById("specular").value;
@@ -190,7 +189,7 @@
 
       //oswietlenie
       light  = new THREE.Mesh( new THREE.SphereGeometry( 2, 16, 16 ), new THREE.MeshBasicMaterial( { color:  0xffffff} ) );
-      light.position.set(0, 0, r);
+      light.position.set(-120, 80, r);
       scene.add(light);
 
       //kula
@@ -258,8 +257,8 @@
       var x = event.clientX - (window.innerWidth / 2);
       var y = -event.clientY + (window.innerHeight / 2);
       if (SELECTED) {
-        var z = Math.sqrt(r * r - x * x - y * y);
-        sphereMaterial.uniforms.lightPosition.value = new THREE.Vector3(x, y, z);
+//        var z = Math.sqrt(r * r - x * x - y * y);
+        sphereMaterial.uniforms.lightPosition.value = new THREE.Vector3(x, y, r);
         light.position.copy(sphereMaterial.uniforms.lightPosition.value);
       }
       render();
