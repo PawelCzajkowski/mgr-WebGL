@@ -19,6 +19,10 @@
       width: 50px;
     }
 
+    #hex {
+      display: inline;
+    }
+
     #indicator {
       display: block;
       visibility: visible;
@@ -67,6 +71,7 @@
         S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('ambient')"><br>
         V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('ambient')"><br>
       </div>
+      <div>Hex: <input class="color ambient" maxlength="7" id="hex" type="text" onchange="colorHex('ambient')"></div>
     </li>
     <li style="margin: 5px">Kolor obiektu<br>
       <input type="color" id="material" value="#b40864" onchange="changeColor(this.id)">
@@ -80,6 +85,7 @@
         S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('material')"><br>
         V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('material')"><br>
       </div>
+      <div>Hex: <input class="color material" maxlength="7" id="hex" type="text" onchange="colorHex('material')"></div>
     </li>
     <li style="margin: 5px">Kolor tła<br>
       <input type="color" id="background" value="#000000" onchange="changeColor(this.id)">
@@ -93,8 +99,9 @@
         S <input id="s" type="number" min="0" max="100" step="1" onchange="colorHSV('background')"><br>
         V <input id="v" type="number" min="0" max="100" step="1" onchange="colorHSV('background')"><br>
       </div>
+      <div>Hex: <input class="color background" maxlength="7" id="hex" type="text" onchange="colorHex('background')"></div>
     </li>
-    <li><a href="#" onclick="location.reload()">Wyczyść</a></li>
+    <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
   <script src="../js/tinycolor.js"></script>
   <script src="../js/three.min.js"></script>
@@ -145,6 +152,8 @@
       var tcolor = new tinycolor({r: r, g: g, b: b});
       document.getElementById(name).value = "#"+tcolor.toHex();
 
+      document.getElementsByClassName(name)[2].value = "#"+tcolor.toHex();
+
       var hsv = tcolor.toHsv();
       document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
       document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
@@ -161,10 +170,33 @@
       var tcolor = new tinycolor({h: h, s: s, v: v});
       document.getElementById(name).value = "#"+tcolor.toHex();
 
+      document.getElementsByClassName(name)[2].value = "#"+tcolor.toHex();
+
       var rgb = tcolor.toRgb();
       document.getElementsByClassName(name)[0].children[0].value = rgb.r;
       document.getElementsByClassName(name)[0].children[2].value = rgb.g;
       document.getElementsByClassName(name)[0].children[4].value = rgb.b;
+
+      redraw();
+    }
+
+    function colorHex(name) {
+      var tcolor = new tinycolor(document.getElementsByClassName(name)[2].value);
+      if(!tcolor.isValid()) {
+        alert("Niepoprawny format!");
+        return false;
+      }
+
+      document.getElementById(name).value = tcolor;
+
+      document.getElementsByClassName(name)[0].children[0].value = tcolor._r;
+      document.getElementsByClassName(name)[0].children[2].value = tcolor._g;
+      document.getElementsByClassName(name)[0].children[4].value = tcolor._b;
+
+      var hsv = tcolor.toHsv();
+      document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
+      document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
+      document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
 
       redraw();
     }
@@ -180,6 +212,8 @@
       document.getElementsByClassName(name)[1].children[0].value = hsv.h.toFixed(0);
       document.getElementsByClassName(name)[1].children[2].value = (hsv.s * 100).toFixed(0);
       document.getElementsByClassName(name)[1].children[4].value = (hsv.v * 100).toFixed(0);
+
+      document.getElementsByClassName(name)[2].value = tcolor._originalInput;
 
       redraw();
     }
