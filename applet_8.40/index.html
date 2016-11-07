@@ -24,7 +24,7 @@
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
       <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
-    <li><a href="#" onclick="resetScene()">Wyczyść</a></li>
+    <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
   <script src="../js/CanvasRenderer.js"></script>
@@ -315,22 +315,6 @@
       renderer.domElement.addEventListener("click", onClick, false);
       renderer.domElement.addEventListener("mousedown", onMouseDown, false);
       renderer.domElement.addEventListener("mouseup", onMouseUp, false);
-    }
-
-    function resetScene() {
-      try {
-        GoB.children = [];
-        GoP.children = [];
-        scene.children = [];
-        points = [], controlPoints = [];
-        geometries = [];
-        scene.add(GoB);
-        scene.add(GoP);
-        i = -1;
-        renderer.clear();
-      } catch (err) {
-        console.error("Error: " + err.message);
-      }
     }
 
     function onResize() {
