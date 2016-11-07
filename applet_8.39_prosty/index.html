@@ -24,7 +24,7 @@
       <li>
         <input type="checkbox" id="boehm" onclick="drawBoehm()">Boehm</li>
       <li>
-        <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+        <input type="checkbox" id="krzywizna" onclick="show()">Pokaż krzywiznę</li>
       <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
 
@@ -67,8 +67,7 @@
     }
 
     function show() {
-      document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
-      if (document.getElementsByName("krzywizna").checked) {
+      if (document.getElementById("krzywizna").checked) {
         drawCurvature(nurbsCurve);
       } else if (scene.getObjectByName("krzywizna") !== undefined) {
         curvature.children = [];
@@ -91,9 +90,13 @@
       if (stopien != 2 && stopien != 3) {
         document.getElementById("boehm").checked = false;
         document.getElementById("boehm").disabled = true;
+        document.getElementById("krzywizna").checked = false;
+        document.getElementById("krzywizna").disabled = true;
         scene.remove(scene.getObjectByName("otoczka"));
+        curvature.children = [];
       } else {
         document.getElementById("boehm").disabled = false;
+        document.getElementById("krzywizna").disabled = false;
       }
       drawNURBS();
     }
@@ -183,7 +186,7 @@
       } else if (document.getElementById("boehm").checked) {
         boehmAlgoritm(nurbsCurve);
       }
-      if (document.getElementsByName("krzywizna").checked) {
+      if (document.getElementById("krzywizna").checked) {
         drawCurvature(nurbsCurve);
       }
 
