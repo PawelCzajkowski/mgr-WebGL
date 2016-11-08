@@ -36,10 +36,10 @@
 </head>
 
 <body>
-  <div id="wykres">
+  <div id="wykres" style="left: 0px">
     <div id="labelV">N(t)</div>
     <div id="label">
-    <input class="suwak" id="suwak" type="range" min="0" max="1" step="0.01" value="0" onmousemove="drawPoints()" onclick="drawPoints()">
+      <input class="suwak" id="suwak" type="range" min="0" max="1" step="0.01" value="0" onmousemove="drawPoints()" onclick="drawPoints()">
     </div>
   </div>
 
@@ -578,7 +578,7 @@
 
     function onMove2(event) {
       event.preventDefault();
-      mouse.x = (2 * event.clientX) / (width) + (factor - 2) / factor;
+      mouse.x = -1 + (2 * event.clientX) / width;
       mouse.y = -(2 * event.clientY) / (height) + (2 - factorV) / factorV;
       raycaster.setFromCamera(mouse, camera2);
       if (SELECTED) {
@@ -617,7 +617,7 @@
       redraw = true;
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera2);
-      mouse.x = (2 * event.clientX) / (width) + (factor - 2) / factor;
+      mouse.x = -1 + (2 * event.clientX) / width;
       mouse.y = -(2 * event.clientY) / (height) + (2 - factorV) / factorV;
       var intersects = raycaster.intersectObjects(groupOfKnots.children);
       if (intersects.length > 0) {
