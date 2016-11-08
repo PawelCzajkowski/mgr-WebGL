@@ -7,7 +7,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Applet 10.17a</title>
+  <title>Applet 10.17b</title>
   <link rel="stylesheet" type="text/css" href="../css/main.css">
   <style>
     input[type="range"] {
@@ -49,16 +49,7 @@
 </head>
 
 <body>
-  <div id="indicator"></div>
   <ul id="navi">
-    <div class="choose">
-      <input type="radio" name="geometry" value="sphere" onchange="redraw()" checked> Kula
-    </div>
-    <div class="choose">
-      <input type="radio" name="geometry" value="circle" onchange="redraw()"> Koło<br>
-    </div>
-    <li style="margin: 5px">Współczynnik odbicia światła otoczenia<br>
-      <input type="range" id="ambientIntensity" min="0" max="1" step="0.01" value="0.5" onmousemove="redraw(this.id)"></li>
     <li style="margin: 5px">Kolor światła otoczenia<br>
       <input type="color" id="ambient" value="#ffffff" onchange="changeColor(this.id)">
       <div class="color ambient">
@@ -108,35 +99,9 @@
   <script src="../js/CanvasRenderer.js"></script>
   <script src="../js/Projector.js"></script>
   <script src="../js/math.js"></script>
-  <script type="x-shader/x-vertex" id="vertexShader">
-    #ifdef GL_ES
-    precision highp float;
-    #endif
-
-    void main() {
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-    }
-  </script>
-  <script type="x-shader/x-fragment" id="fragmentShader">
-    #ifdef GL_ES
-    precision highp float;
-    #endif
-
-    uniform vec3 color;
-
-    uniform vec3 ambientColor;
-    uniform float ambientIntensity;
-
-    void main() {
-      vec4 addedLights = vec4(0.0,0.0,0.0, 1.0);
-
-        addedLights.rgb += ambientColor * ambientIntensity ;
-      gl_FragColor = vec4(color * addedLights.rgb, 1.0);
-      }
-  </script>
   <script>
-    var raycaster, scene, camera, renderer, plane, sphereMaterial, sphere, circle;
-    var PUSHED, color;
+    var raycaster, scene, camera, renderer, plane, sphereMaterial, sphere, light;
+    var color;
 
     init();
     changeColor("ambient");
@@ -218,34 +183,14 @@
       redraw();
     }
 
-    function redraw(id) {
-      sphereMaterial.uniforms.ambientIntensity.value = document.getElementById("ambientIntensity").value;
+    function redraw() {
       color = document.getElementById("ambient").value;
-      sphereMaterial.uniforms.ambientColor.value = new THREE.Color(color.toString());
+      light.color = new THREE.Color(color.toString());
       color = document.getElementById("material").value;
-      sphereMaterial.uniforms.color.value = new THREE.Color(color.toString());
+      sphereMaterial.color = new THREE.Color(color.toString());
       color = document.getElementById("background").value;
       renderer.setClearColor(color.toString());
-      if(document.getElementsByName("geometry")[0].checked) {
-        circle.visible = false;
-        sphere.visible = true;
-      } else {
-        circle.visible = true;
-        sphere.visible = false;
-      }
 
-      try {
-        document.getElementById("indicator").innerHTML = document.getElementById(id).value;
-      } catch (e) {
-        console.log(e.message);
-      }
-
-
-      if (PUSHED) {
-        document.getElementById("indicator").style.visibility = "visible";
-      } else {
-        document.getElementById("indicator").style.visibility = "hidden";
-      }
       render();
     }
 
@@ -294,32 +239,20 @@
       );
       scene.add(plane);
 
+      light = new THREE.DirectionalLight( 0xffffff );
+      light.position.set( 100, 300, 500 );
+      scene.add(light);
+
       //kula
-      uniforms = {
-        color: {type: "c", value: new THREE.Color( "#b40864" )},
-        ambientColor: {type: "c", value: new THREE.Color( "#ffffff" )},
-        ambientIntensity: {type: "f", value: 0.5},
-      }
       var sphereGeometry = new THREE.SphereGeometry(100, 32, 32);
-      sphereMaterial = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: document.getElementById("vertexShader").text,
-        fragmentShader: document.getElementById("fragmentShader").text,
+      sphereMaterial = new THREE.MeshLambertMaterial({
+        color: 0xb40864,
+        depthTest: true
       });
       sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
       scene.add(sphere);
 
-      //kolo
-      var circleGeometry = new THREE.CircleGeometry(100, 32);
-      circle = new THREE.Mesh(circleGeometry, sphereMaterial);
-      circle.visible = false;
-      scene.add(circle);
-
       window.addEventListener("resize", onResize, false);
-      var el = document.getElementById("ambientIntensity");
-        el.addEventListener("mousemove", moveRect, false );
-        el.addEventListener("mousedown", function(){PUSHED = true;}, false );
-        el.addEventListener("mouseup", function(){PUSHED = false; redraw();}, false );
     }
 
     function onResize() {
@@ -327,15 +260,6 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       render();
-    }
-
-    function moveRect(event) {
-      var width = document.getElementById("indicator").offsetWidth;
-      var height = document.getElementById("indicator").offsetHeight;
-
-      document.getElementById("indicator").style.marginLeft = -width - 4 + event.clientX+"px";
-      document.getElementById("indicator").style.marginTop = (event.clientY - height - 10)+"px";
-      redraw();
     }
   </script>
 </body>
