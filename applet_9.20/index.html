@@ -620,6 +620,15 @@
 
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
+
+      width = window.innerWidth * factor;
+      height = window.innerHeight * factorV;
+
+      A = new THREE.Vector3(-width * (0.425 - 0.02), -height / 2.8, 0);
+      B = new THREE.Vector3(width * (0.425 + 0.02), -height / 2.8, 0);
+      V = new THREE.Vector3().subVectors(B, A);
+
+      render();
     }
 
     function onMove(event) {
