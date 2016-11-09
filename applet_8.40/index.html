@@ -23,7 +23,8 @@
     <li style="padding: 8px">
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
-      <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+      <input type="checkbox" id="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+    <li style="padding: 8px">
       <input type="checkbox" name="elementy" onclick="hide()">Ukryj linie konstrukcyjne</li>
     <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
@@ -68,8 +69,7 @@
       render();
     }
     function show() {
-      document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
-      if (document.getElementsByName("krzywizna").checked) {
+      if (document.getElementById("krzywizna").checked) {
         drawBezier(geometries);
       } else {
         GoC.children = [];
@@ -178,7 +178,7 @@
         cubicBezier.name = 'bezier';
         GoB.add(cubicBezier);
 
-        if (document.getElementsByName("krzywizna").checked) {
+        if (document.getElementById("krzywizna").checked) {
           drawCurvature(curve, geometries[j]);
         }
 
@@ -186,6 +186,14 @@
           color: "black"
         }));
         GoL.add(line);
+
+        var dashedGeg = new THREE.Geometry();
+        dashedGeg.vertices.push(geo[j].vertices[1], geo[j].vertices[2]);
+        dashedGeg.computeLineDistances();
+        var dashedLine = new THREE.Line(dashedGeg, new THREE.LineDashedMaterial({
+          color: "black", dashSize: 10, gapSize: 10, linewidth: 1
+        }));
+        GoL.add(dashedLine);
       }
       render();
     }
