@@ -212,7 +212,7 @@
       for (var i = 0; i < n; i++) {
         var cGeometry = new THREE.Geometry();
         var controlPoints = scene.getObjectByName("otoczka").children[i].geometry.vertices;
-        cGeometry = wyznaczKrzywizne(nurbsCurve, controlPoints, 20, controlPoints.length - 1, i, n);
+        cGeometry = wyznaczKrzywizne(nurbsCurve, controlPoints, 50, controlPoints.length - 1, i, n);
         var cLines = new THREE.LineSegments(cGeometry, cMaterial);
         curvature.add(cLines);
         render();
