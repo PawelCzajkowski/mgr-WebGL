@@ -24,6 +24,7 @@
       <input type="checkbox" id="edit">Edytuj krzywą</li>
     <li>
       <input type="checkbox" name="krzywizna" onclick="show()">Pokaż krzywiznę</li>
+      <input type="checkbox" name="elementy" onclick="hide()">Ukryj linie konstrukcyjne</li>
     <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -31,7 +32,7 @@
   <script src="../js/Projector.js"></script>
   <script src="../js/math.js"></script>
   <script>
-    var raycaster, scene, camera, renderer, plane, GoP, GoB, GoC;
+    var raycaster, scene, camera, renderer, plane, GoP, GoB, GoC, GoL, GoK;
     var INTERSECTED, SELECTED;
     var points = [],
       controlPoints = [];
@@ -48,6 +49,24 @@
       option = event.target.value;
     }
 
+    function hide() {
+      document.getElementsByName("elementy").checked = (document.getElementsByName("elementy").checked ? false : true);
+
+      if (document.getElementsByName("elementy").checked) {
+        GoL.visible = false;
+        GoP.visible = false;
+        for (var i = 1; i < points.length-1; i++) {
+          GoK.add(points[i].clone());
+        }
+        document.getElementById("edit").disabled = true;
+      } else {
+        GoL.visible = true;
+        GoP.visible = true;
+        GoK.children = [];
+        document.getElementById("edit").disabled = false;
+      }
+      render();
+    }
     function show() {
       document.getElementsByName("krzywizna").checked = (document.getElementsByName("krzywizna").checked ? false : true);
       if (document.getElementsByName("krzywizna").checked) {
@@ -146,7 +165,7 @@
     }
 
     function drawBezier(geo) {
-      scene.remove(scene.getObjectByName('line'));
+      GoL.children = [];
       for (var j = 0; j < i; j++) {
         geometries[j].verticesNeedUpdate = true;
         var curve = new THREE.CubicBezierCurve(geo[j].vertices[0], geo[j].vertices[1], geo[j].vertices[2], geo[j].vertices[3]);
@@ -166,8 +185,7 @@
         var line = new THREE.LineSegments(geo[j], new THREE.LineBasicMaterial({
           color: "black"
         }));
-        line.name = "lines";
-        scene.add(line);
+        GoL.add(line);
       }
       render();
     }
@@ -192,8 +210,7 @@
         var lines = new THREE.Line(geometry, new THREE.LineBasicMaterial({
           color: "black"
         }));
-        lines.name = "line";
-        scene.add(lines);
+        GoL.add(lines);
       } else if (points.length > 2) {
         if (points.length == 3) {
           pMaterial = new THREE.SpriteMaterial({
@@ -310,6 +327,12 @@
       GoC = new THREE.Group();
       scene.add(GoC);
 
+      GoL = new THREE.Group();
+      scene.add(GoL);
+
+      GoK = new THREE.Group();
+      scene.add(GoK);
+
       window.addEventListener("resize", onResize, false);
       renderer.domElement.addEventListener("mousemove", onMove, false);
       renderer.domElement.addEventListener("click", onClick, false);
@@ -329,7 +352,7 @@
     }
 
     function onMove(event) {
-      if (document.getElementById("edit").checked) {
+      if (document.getElementById("edit").checked && !document.getElementById("edit").disabled) {
         event.preventDefault();
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -378,7 +401,7 @@
     function onClick(event) {
       mouse.x = event.clientX - window.innerWidth / 2;
       mouse.y = -(event.clientY - window.innerHeight / 2);
-      if (!document.getElementById("edit").checked) {
+      if (!document.getElementById("edit").checked && !document.getElementById("edit").disabled) {
         addPoint(mouse.x, mouse.y);
       }
       render();
