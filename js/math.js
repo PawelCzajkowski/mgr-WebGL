@@ -113,10 +113,11 @@ function wymiernyDeCasteljau(punkty, u, wagi) {
 }
 
 // Wyznaczenie krzywizny na podstawie algorytmu de Casteljau
-function wyznaczKrzywizne(curve, ctrlPoint, count, deg, offset, number) {
+function wyznaczKrzywizne(curve, ctrlPoint, count, deg, factor, offset, number) {
   var rGeometry = new THREE.Geometry();
   if (offset == undefined) offset = 0;
   if (number == undefined) number = 1;
+  if (factor == undefined) factor = 1;
   for (var i = 0; i <= count; i++) {
     var u = i / count;
 
@@ -139,8 +140,10 @@ function wyznaczKrzywizne(curve, ctrlPoint, count, deg, offset, number) {
     var temp = curve.getPoint(i / (count * number) + offset / number);
     rGeometry.vertices.push(new THREE.Vector3(temp.x, temp.y));
     var temp2 = new THREE.Vector3();
-    temp2.x = temp.x + p1.y * curv / p1.length();
-    temp2.y = temp.y - p1.x * curv / p1.length();
+
+    temp2.x = temp.x + p1.y * curv * factor / p1.length();
+    temp2.y = temp.y - p1.x * curv * factor / p1.length();
+
     rGeometry.vertices.push(temp2);
   }
   return rGeometry;
