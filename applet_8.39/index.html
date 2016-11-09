@@ -85,6 +85,7 @@
     var offset = new THREE.Vector3();
     var group = new THREE.Group();
     var groupOfKnots = new THREE.Group();
+    var brzegi = new THREE.Group();
     var otoczka = new THREE.Group();
 
     var rand = Math.random();
@@ -209,6 +210,7 @@
     function drawKnots() {
       try {
         groupOfKnots.children = [];
+        brzegi.children = [];
       } catch (err) {
         console.error(err.message);
       }
@@ -229,7 +231,11 @@
         } else {
           cube.position.z = l - Math.abs(j + 1);
         }
-        groupOfKnots.add(cube);
+        if (i > stopien && i < nurbsWezly.length-stopien-1) {
+          groupOfKnots.add(cube);
+        } else {
+          brzegi.add(cube);
+        }
       }
     }
 
@@ -398,7 +404,6 @@
       }
     }
 
-
     function init() {
       var container = document.createElement("div");
       document.body.appendChild(container);
@@ -448,6 +453,8 @@
       scene2.add(group);
       groupOfKnots.name = "knots";
       scene2.add(groupOfKnots);
+
+      scene2.add(brzegi);
 
       width = window.innerWidth * factor;
       height = window.innerHeight * factorV;
@@ -585,11 +592,11 @@
         requestAnimationFrame(render);
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
-          if (intersects[0].point.sub(offset).x > A.x && intersects[0].point.sub(offset).x < B.x) {
+          if (true) {
             SELECTED.position.x = intersects[0].point.sub(offset).x;
-            var i = groupOfKnots.children.indexOf(SELECTED);
+            var i = groupOfKnots.children.indexOf(SELECTED)+stopien+1;
             nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
-            checkKnots(nurbsWezly, i);
+            sklejPunkty(nurbsWezly, i);
             drawDeBoor();
           }
         }
@@ -615,6 +622,7 @@
 
     function onMouseDown2(event) {
       redraw = true;
+      temp = Infinity;
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera2);
       mouse.x = -1 + (2 * event.clientX) / width;

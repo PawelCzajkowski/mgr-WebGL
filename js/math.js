@@ -43,6 +43,16 @@ function checkKnots(arr, j) {
   }
 }
 
+function sklejPunkty(arr, i) {
+  var t, j = i - 1 - stopien;
+  if ((arr[i] - arr[i-1] < temp) && (arr[i] - arr[i-1] < 0.05)) {
+    arr[i] = arr[i-1];
+  } else if ((arr[i] - arr[i-1] > temp) && (arr[i+1] - arr[i]) < 0.05) {
+    arr[i] = arr[i+1];
+  }
+  temp = arr[i] - arr[i-1];
+}
+
 //wyznacz punkty posredni do wyznacznia wektorów A, B, C i D
 //umożliwiających wyznacznie krzywizny
 function wyznaczPunkty(inArray, u) {
