@@ -14,23 +14,11 @@
       display: block;
       margin: 8px;
     }
-
-    #label {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      user-select: none;
-      position: absolute;
-      width: 85%;
-      left: 10%;
-      bottom: -15px;
-      text-align: justify;
-    }
   </style>
 </head>
 
 <body onload="show_div()">
   <div id="wykres">
-    <div id="label">0 t 1<span style="width: 100%; display: inline-block;"></span></div>
   </div>
 
   <ul id="navi">
@@ -94,7 +82,7 @@
   <script src="../js/NURBSSurface.js"></script>
   <script>
     var raycaster, scene, scene2, camera, camera2, renderer, renderer2, plane, plane2, controls;
-    var INTERSECTED, SELECTED, req;
+    var INTERSECTED, SELECTED, req, temp, stopien;
     var controlPoints, sprites, cols, rows, id;
     var uKnots, vKnots, uDeg, vDeg;
     var groupPoints, groupLines, groupSpline;
@@ -107,6 +95,7 @@
     var offset = new THREE.Vector3();
     var group = new THREE.Group();
     var groupOfKnots = new THREE.Group();
+    var brzegi = new THREE.Group();
 
     var rand = Math.random();
     var WIDTH = document.getElementById("form").clientWidth;
@@ -176,10 +165,10 @@
 
     function showBspline() {
       if (document.getElementsByName("type")[0].checked) {
-        drawKnots(uKnots);
+        drawKnots(uKnots, uDeg);
         drawDeBoor(uKnots, uDeg);
       } else {
-        drawKnots(vKnots);
+        drawKnots(vKnots, vDeg);
         drawDeBoor(vKnots, vDeg);
       }
       render();
@@ -243,9 +232,10 @@
       scene2.add(box);
     }
 
-    function drawKnots(array) {
+    function drawKnots(array, degree) {
       try {
         groupOfKnots.children = [];
+        brzegi.children = [];
       } catch (err) {
         console.error(err.message);
       }
@@ -253,7 +243,7 @@
       var l = Math.round(array.length / 2);
       for (var i = 0, j = -l; i < array.length; i++, j++) {
         temp = new THREE.Vector3().lerpVectors(A, B, array[i]);
-        var cubegeometry = new THREE.PlaneGeometry(8, 8);
+        var cubegeometry = new THREE.PlaneGeometry(12, 12);
         var material = new THREE.MeshBasicMaterial({
           color: "blue"
         });
@@ -266,7 +256,11 @@
         } else {
           cube.position.z = l - Math.abs(j + 1);
         }
-        groupOfKnots.add(cube);
+        if (i > degree && i < array.length - degree - 1) {
+          groupOfKnots.add(cube);
+        } else {
+          brzegi.add(cube);
+        }
       }
     }
 
@@ -361,7 +355,6 @@
     }
 
     function drawSplines(nurbs) {
-      console.log("sklejane");
       try {
         scene.remove(groupSpline);
       } catch (e) {
@@ -557,6 +550,8 @@
       groupOfKnots.name = "knots";
       scene2.add(groupOfKnots);
 
+      scene2.add(brzegi);
+
       width = factor * window.innerWidth;
       height = factor * window.innerHeight;
       A = new THREE.Vector3(-width * (0.45), -height / 2.8, 0);
@@ -615,12 +610,15 @@
       renderer2.setSize(window.innerWidth * factor, window.innerHeight * factor);
 
       width = window.innerWidth * factor;
-      height = window.innerHeight * factorV;
+      height = window.innerHeight * factor;
 
       A = new THREE.Vector3(-width * (0.45), -height / 2.8, 0);
       B = new THREE.Vector3(width * (0.45), -height / 2.8, 0);
       V = new THREE.Vector3().subVectors(B, A);
 
+      drawGraph();
+      drawDeBoor();
+      drawKnots();
       render();
     }
 
@@ -705,7 +703,6 @@
       mouse.y = -(2 * event.clientY) / (factor * window.innerHeight) + (2 - factor) / factor;
       raycaster.setFromCamera(mouse, camera2);
       if (SELECTED) {
-        console.log("move");
         requestAnimationFrame(render);
         var intersects = raycaster.intersectObject(plane2);
         if (intersects.length > 0) {
@@ -713,12 +710,18 @@
             SELECTED.position.x = intersects[0].point.sub(offset).x;
             var i = groupOfKnots.children.indexOf(SELECTED);
             if (document.getElementsByName("type")[0].checked) {
+              i += uDeg + 1;
               uKnots[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
+              stopien = uDeg;
               checkKnots(uKnots, i);
+              sklejPunkty(uKnots, i);
               drawDeBoor(uKnots, uDeg);
             } else {
+              i += vDeg + 1;
               vKnots[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
+              stopien = vDeg;
               checkKnots(vKnots, i);
+              sklejPunkty(vKnots, i);
               drawDeBoor(vKnots, vDeg);
             }
             recalculate();
@@ -746,6 +749,7 @@
 
     function onMouseDown2(event) {
       redraw = true;
+      temp = Infinity;
       event.preventDefault();
       raycaster.setFromCamera(mouse, camera2);
       mouse.x = (2 * event.clientX) / (factor * window.innerWidth) + (factor - 2) / factor;
@@ -769,6 +773,7 @@
         SELECTED = null;
       }
       document.body.style.cursor = 'auto';
+      showBspline();
       recalculate();
     }
 

@@ -585,10 +585,11 @@
         requestAnimationFrame(render);
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
-          if (true) {
+          if (intersects[0].point.sub(offset).x > A.x && intersects[0].point.sub(offset).x < B.x) {
             SELECTED.position.x = intersects[0].point.sub(offset).x;
             var i = groupOfKnots.children.indexOf(SELECTED) + stopien + 1;
             nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
+            checkKnots(nurbsWezly, i);
             sklejPunkty(nurbsWezly, i);
             drawDeBoor();
           }

@@ -44,10 +44,14 @@ function checkKnots(arr, j) {
 }
 
 function sklejPunkty(arr, i) {
-  var t, j = i - 1 - stopien;
-  if ((arr[i] - arr[i-1] < temp) && (arr[i] - arr[i-1] < 0.05)) {
+  var t;
+  if (arr[i] <= 0.05) {
+    arr[i] = 0;
+  } else if (arr[i] >= 0.95 ) {
+    arr[i] = 1;
+  } else if ((arr[i] - arr[i-1] < temp) && (arr[i] - arr[i-1] <= 0.05)) {
     arr[i] = arr[i-1];
-  } else if ((arr[i] - arr[i-1] > temp) && (arr[i+1] - arr[i]) < 0.05) {
+  } else if ((arr[i] - arr[i-1] > temp) && (arr[i+1] - arr[i]) <= 0.05) {
     arr[i] = arr[i+1];
   }
   temp = arr[i] - arr[i-1];
