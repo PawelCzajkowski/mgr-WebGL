@@ -50,7 +50,7 @@ li a {
 
 li a:hover {
   background-color: #555;
-  color: white;
+/*  color: white;*/
 }
 
 a.nowy {
@@ -80,7 +80,7 @@ input[type=number] {
   width: 40px;
 }
 
-input[type=number]:hover {}
+/*input[type=number]:hover {}*/
 
 div.suwak {
   display: block;

@@ -199,9 +199,9 @@
 
       raycaster = new THREE.Raycaster();
 
-      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(2 * window.innerWidth, 2 * window.innerHeight, 8, 8),
+      plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(window.innerWidth*2, window.innerHeight*2, 8, 8),
         new THREE.MeshBasicMaterial({
-          visible: false
+          visible: false, color: "gray"
         })
       );
       scene.add(plane);
@@ -252,8 +252,8 @@
         requestAnimationFrame(render);
         var intersects = raycaster.intersectObject(plane);
         if (intersects.length > 0) {
-          SELECTED.position.copy(intersects[0].point.sub(offset));
-          geometry.verticesNeedUpdate = true;
+          SELECTED.position.copy(intersects[0].point);
+//          geometry.verticesNeedUpdate = true;
           scene.remove(scene.getObjectByName('bezier'));
           drawLine(geometry);
           drawBezier(geometry);
@@ -291,16 +291,9 @@
 
     function onMouseDown(event) {
       event.preventDefault();
-      raycaster.setFromCamera(mouse, camera);
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       var intersects = raycaster.intersectObjects(points);
       if (intersects.length > 0) {
         SELECTED = intersects[0].object;
-        var intersect = raycaster.intersectObject(plane);
-        if (intersect.length > 0) {
-          offset.copy(intersect[0].point).sub(plane.position);
-        }
         document.body.style.cursor = 'move';
       }
       render();

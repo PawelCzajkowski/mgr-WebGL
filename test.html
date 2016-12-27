@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <script src="js/three.min.js"></script>
+  </head>
+  <body>
+    <script>
+
+      var scene = new THREE.Scene();
+
+      var camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 100);
+      camera.position.z = 10;
+
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      var geometry = new THREE.CircleGeometry(200, 40);
+      var material = new THREE.MeshBasicMaterial( {color: "green"});
+      var circle = new THREE.Mesh(geometry, material);
+      scene.add(circle);
+
+      renderer.render(scene, camera);
+    </script>
+  </body>
+</html>

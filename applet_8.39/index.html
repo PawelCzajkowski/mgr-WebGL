@@ -366,7 +366,7 @@
           point.position.y = position.y;
           punkty.add(point);
         }
-        drawDeBoor();
+//        drawDeBoor();
       }
       if (document.getElementById("otoczka").checked) {
         wyswietlOtoczke(copyPoints(points), stopien);
@@ -494,7 +494,7 @@
       V = new THREE.Vector3().subVectors(B, A);
 
       drawGraph();
-      drawDeBoor();
+//      drawDeBoor();
       drawKnots();
       drawPoints();
       render();
@@ -592,7 +592,7 @@
             nurbsWezly[i] = length(new THREE.Vector3().subVectors(intersects[0].point.sub(offset), A)) / V.length();
             checkKnots(nurbsWezly, i);
             sklejPunkty(nurbsWezly, i);
-            drawDeBoor();
+//            drawDeBoor();
           }
         }
         return;

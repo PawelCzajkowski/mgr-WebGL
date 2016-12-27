@@ -545,10 +545,10 @@ BezierCurve.prototype.getPoint = function (t) {
     return new THREE.Vector3(sumaX, sumaY, 0);
   } else {
     for (var i = 0; i <= this.n; i++) {
-      val = dwumian(this.n, i) * Math.pow(k, (this.n - i)) * Math.pow(t, i);
-      suma += val * this.weight[i];
-      sumaX += val * this.geometry[i * 3] * this.weight[i];
-      sumaY += val * this.geometry[i * 3 + 1] * this.weight[i];
+      val = dwumian(this.n, i) * Math.pow(k, (this.n - i)) * Math.pow(t, i)* this.weight[i];
+      suma += val;
+      sumaX += val * this.geometry[i * 3];
+      sumaY += val * this.geometry[i * 3 + 1];
     }
     return new THREE.Vector3(sumaX / suma, sumaY / suma, 0);
   }
