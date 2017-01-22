@@ -291,25 +291,25 @@
       };
       var vertex, point, graph;
       var group = new THREE.Group();
-      var Pmaterial = new THREE.SpriteMaterial({
-        color: "mediumseagreen"
+      var Pmaterial = new THREE.MeshBasicMaterial({
+        color: "#930000"
       });
       var val = document.getElementById('suwak').value;
       vertex = nurbsCurve.getPoint(val);
-      var point = new THREE.Sprite(Pmaterial);
+      var pGeometry = new THREE.CircleBufferGeometry( 5, 32 );
+      var point = new THREE.Mesh(pGeometry, Pmaterial);
       point.position.x = vertex.x;
       point.position.y = vertex.y;
-      point.scale.x = point.scale.y = 10;
       point.name = 'punkt';
       scene.add(point);
 
       for (var i = 0; i <= nurbsPunktyKontrolne.length; i++) {
         var span = THREE.NURBSUtils.findSpan(stopien, val, nurbsWezly);
         var t = THREE.NURBSUtils.calcBasisFunctions(span, val, stopien, nurbsWezly);
-        var point = new THREE.Sprite(Pmaterial);
+        var pGeometry = new THREE.CircleBufferGeometry( 5, 32 );
+        var point = new THREE.Mesh(pGeometry, Pmaterial);
         point.position.x = A.x + val * V.x;
         point.position.y = A.y + t[i] * Vy.y;
-        point.scale.x = point.scale.y = 10;
         group.add(point);
       }
       group.name = 'punkt';
