@@ -25,7 +25,7 @@
     <li>
       <input type="checkbox" id="krzywizna" onclick="show()">Pokaż krzywiznę</li>
     <li style="padding: 8px">
-      <input type="checkbox" name="elementy" onclick="hide()">Ukryj linie konstrukcyjne</li>
+      <input type="checkbox" name="elementy" onclick="hide()">Ukryj linie przerywane</li>
     <li><a href="#" onclick="location.reload(true)">Wyczyść</a></li>
   </ul>
   <script src="../js/three.min.js"></script>
@@ -33,7 +33,7 @@
   <script src="../js/Projector.js"></script>
   <script src="../js/math.js"></script>
   <script>
-    var raycaster, scene, camera, renderer, plane, GoP, GoB, GoC, GoL, GoK;
+    var raycaster, scene, camera, renderer, plane, GoP, GoB, GoC, GoL, GoD;
     var INTERSECTED, SELECTED;
     var points = [],
       controlPoints = [];
@@ -54,20 +54,13 @@
       document.getElementsByName("elementy").checked = (document.getElementsByName("elementy").checked ? false : true);
 
       if (document.getElementsByName("elementy").checked) {
-        GoL.visible = false;
-        GoP.visible = false;
-        for (var i = 1; i < points.length-1; i++) {
-          GoK.add(points[i].clone());
-        }
-        document.getElementById("edit").disabled = true;
+        GoD.visible = false;
       } else {
-        GoL.visible = true;
-        GoP.visible = true;
-        GoK.children = [];
-        document.getElementById("edit").disabled = false;
+        GoD.visible = true;
       }
       render();
     }
+
     function show() {
       if (document.getElementById("krzywizna").checked) {
         drawBezier(geometries);
@@ -166,6 +159,7 @@
 
     function drawBezier(geo) {
       GoL.children = [];
+      GoD.children = [];
       for (var j = 0; j < i; j++) {
         geometries[j].verticesNeedUpdate = true;
         var curve = new THREE.CubicBezierCurve(geo[j].vertices[0], geo[j].vertices[1], geo[j].vertices[2], geo[j].vertices[3]);
@@ -193,7 +187,7 @@
         var dashedLine = new THREE.Line(dashedGeg, new THREE.LineDashedMaterial({
           color: "black", dashSize: 10, gapSize: 10, linewidth: 1
         }));
-        GoL.add(dashedLine);
+        GoD.add(dashedLine);
       }
       render();
     }
@@ -338,8 +332,8 @@
       GoL = new THREE.Group();
       scene.add(GoL);
 
-      GoK = new THREE.Group();
-      scene.add(GoK);
+      GoD = new THREE.Group();
+      scene.add(GoD);
 
       window.addEventListener("resize", onResize, false);
       renderer.domElement.addEventListener("mousemove", onMove, false);
