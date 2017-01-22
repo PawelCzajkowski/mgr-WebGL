@@ -210,7 +210,7 @@ function rysujOtoczke(points) {
   var oMaterial = new THREE.MeshBasicMaterial({
     color: "#c5ebfb",
     side: THREE.DoubleSide,
-    transparent: true,
+    transparent: true
   });
   var oMesh = new THREE.Mesh(oGeometry, material);
   oMesh.name = "otoczka";
@@ -251,7 +251,9 @@ function wyswietlOtoczke(controlPoints, degree) {
 function boehmAlgoritm(nurbs, draw) {
   try {
     scene.remove(scene.getObjectByName("otoczka"));
+    scene.remove(scene.getObjectByName("punkty_podzialu"));
     group = [];
+    groupOfPoints = [];
   } catch (e) {
     console.log(e.message);
   }
@@ -273,6 +275,10 @@ function boehmAlgoritm(nurbs, draw) {
   group.name = "otoczka";
   scene.add(group);
 
+  var groupOfPoints = new THREE.Group();
+  groupOfPoints.name = 'punkty_podzialu';
+  scene.add(groupOfPoints);
+
   if (nurbs.knots !== undefined || nurbs.knots.length > 0) {
     for (var i = 0; i < nurbs.knots.length - 1; i++) {
       d.push(nurbs.knots[i + 1] - nurbs.knots[i]);
@@ -281,7 +287,7 @@ function boehmAlgoritm(nurbs, draw) {
   var material = new THREE.MeshBasicMaterial({
     color: "#c5ebfb",
     side: THREE.DoubleSide,
-    transparent: true,
+    transparent: true
   });
   if (nurbs.degree == 2) {
     if (nurbs.controlPoints.length == 3) {
@@ -325,12 +331,12 @@ function boehmAlgoritm(nurbs, draw) {
         }
         geometry.faces.push(new THREE.Face3(0, 1, 2));
         mesh = new THREE.Mesh(geometry, material);
+        group.add(mesh);
 
         var point = new THREE.Mesh(pGeometry, pMaterial);
         point.position.copy(processed[i]);
-        point.position.z = 2;
-        group.add(mesh);
-        group.add(point);
+        point.position.z = 1;
+        groupOfPoints.add(point);
       }
       geometry = new THREE.Geometry();
       geometry.vertices.push(processed[processed.length - 1]);
@@ -341,12 +347,12 @@ function boehmAlgoritm(nurbs, draw) {
       }
       geometry.faces.push(new THREE.Face3(0, 1, 2));
       mesh = new THREE.Mesh(geometry, material);
+      group.add(mesh);
 
       var point = new THREE.Mesh(pGeometry, pMaterial);
       point.position.copy(processed[processed.length - 1]);
-      point.position.z = 2;
-      group.add(mesh);
-      group.add(point);
+      point.position.z = 1;
+      groupOfPoints.add(point);
     }
   } else if (nurbs.degree == 3) {
     geometry = new THREE.Geometry();
@@ -382,11 +388,11 @@ function boehmAlgoritm(nurbs, draw) {
 
         var point = new THREE.Mesh(pGeometry, pMaterial);
         point.position.copy(C);
-        group.add(point);
+        groupOfPoints.add(point);
 
         point = new THREE.Mesh(pGeometry, pMaterial);
         point.position.copy(D);
-        group.add(point);
+        groupOfPoints.add(point);
       }
 
       //wyznaczone boki dzielimy na pol
@@ -400,8 +406,8 @@ function boehmAlgoritm(nurbs, draw) {
 
         var point = new THREE.Mesh(pGeometry, pMaterial);
         point.position.copy(C);
-        point.position.z = 2;
-        group.add(point);
+        point.position.z = 1;
+        groupOfPoints.add(point);
       }
 
       //definiowanie geometrii
@@ -428,23 +434,24 @@ function boehmAlgoritm(nurbs, draw) {
           //rysowanie otoczki
           mesh = new THREE.Mesh(arr, material);
           group.add(mesh);
-
         }
       }
       //line segments
       var sGeometry = new THREE.Geometry();
       for (var i = 1; i < processed.length - 1; i++) {
         sGeometry.vertices.push(processed[i]);
+        sGeometry.vertices[sGeometry.vertices.length-1].z = 0;
       }
       var sMaterial = new THREE.LineBasicMaterial({
         color: "black",
         linewidth: 2
       });
-      group.add(new THREE.LineSegments(sGeometry, sMaterial));
+      groupOfPoints.add(new THREE.LineSegments(sGeometry, sMaterial));
     }
   }
   if (!draw) {
     group.visible = false;
+    groupOfPoints.visible = false;
   }
 }
 

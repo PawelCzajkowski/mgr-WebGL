@@ -87,6 +87,7 @@
 
     function change() {
       scene.remove(scene.getObjectByName("otoczka"));
+      scene.remove(scene.getObjectByName("punkty_podzialu"));
       if (document.getElementById("otoczka").checked) {
         document.getElementById("boehm").checked = false;
         wyswietlOtoczke(copyPoints(points), stopien);
@@ -96,6 +97,7 @@
 
     function drawBoehm() {
       scene.remove(scene.getObjectByName("otoczka"));
+      scene.remove(scene.getObjectByName("punkty_podzialu"));
       if (document.getElementById("boehm").checked) {
         document.getElementById("otoczka").checked = false;
         boehmAlgoritm(nurbsCurve);
