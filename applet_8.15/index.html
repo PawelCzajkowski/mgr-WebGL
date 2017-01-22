@@ -76,6 +76,8 @@
     var mouse = new THREE.Vector2();
     var offset = new THREE.Vector3();
 
+    var rand = Math.random();
+
     function change() {
       document.getElementsByName("otoczka").checked = (document.getElementsByName("otoczka").checked ? false : true);
       render();
@@ -153,12 +155,12 @@
     //rysuj funkcje Bernsteina
     function drawBernstein(n) {
       var group = new THREE.Group();
-      for (var i = 0; i <= n; i++) {
+      for (var i = 0, color = 0; i <= n; i++, color += rand) {
         Bernstein = new BernsteinCurve(n, i);
         var Bpath = new THREE.Path(Bernstein.getPoints(100));
         var Bgeometry = Bpath.createPointsGeometry(100);
         var Bmaterial = new THREE.LineBasicMaterial({
-          color: "purple"
+          color: '#' + (0xff00000 + (color) * 0xffffff).toString(16).substr(1, 6)
         });
         var bernsteinObject = new THREE.Line(Bgeometry, Bmaterial);
         group.add(bernsteinObject);
