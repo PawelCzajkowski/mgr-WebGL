@@ -117,13 +117,13 @@
     }
 
     function drawPoint(position) {
-      var pMaterial = new THREE.SpriteMaterial({
-        color: "red"
+      var pMaterial = new THREE.MeshBasicMaterial({
+        color: "#930000"
       });
-      var point = new THREE.Sprite(pMaterial);
+      var pGeometry = new THREE.CircleBufferGeometry( 5, 32 );
+      var point = new THREE.Mesh(pGeometry, pMaterial);
       point.position.x = position.x;
       point.position.y = position.y;
-      point.scale.x = point.scale.y = 10;
       group.add(point);
     }
 
