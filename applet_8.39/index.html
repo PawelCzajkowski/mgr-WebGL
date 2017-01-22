@@ -473,13 +473,13 @@
       camera.left = window.innerWidth / -2;
       camera.right = window.innerWidth / 2;
       camera.top = window.innerHeight / 2;
-      camera.down = window.innerWidth / -2;
+      camera.down = window.innerHeight / -2;
       camera.updateProjectionMatrix();
 
       camera2.left = (factor * window.innerWidth) / -2;
       camera2.right = (factor * window.innerWidth) / 2;
       camera2.top = (factorV * window.innerHeight) / 2;
-      camera2.down = (factorV * window.innerWidth) / -2;
+      camera2.down = (factorV * window.innerHeight) / -2;
       camera2.updateProjectionMatrix();
 
       renderer.setSize(window.innerWidth, window.innerHeight);
