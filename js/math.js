@@ -47,14 +47,14 @@ function sklejPunkty(arr, i) {
   var t;
   if (arr[i] <= 0.05) {
     arr[i] = 0;
-  } else if (arr[i] >= 0.95 ) {
+  } else if (arr[i] >= 0.95) {
     arr[i] = 1;
-  } else if ((arr[i] - arr[i-1] < temp) && (arr[i] - arr[i-1] <= 0.05)) {
-    arr[i] = arr[i-1];
-  } else if ((arr[i] - arr[i-1] > temp) && (arr[i+1] - arr[i]) <= 0.05) {
-    arr[i] = arr[i+1];
+  } else if ((arr[i] - arr[i - 1] < temp) && (arr[i] - arr[i - 1] <= 0.05)) {
+    arr[i] = arr[i - 1];
+  } else if ((arr[i] - arr[i - 1] > temp) && (arr[i + 1] - arr[i]) <= 0.05) {
+    arr[i] = arr[i + 1];
   }
-  temp = arr[i] - arr[i-1];
+  temp = arr[i] - arr[i - 1];
 }
 
 //wyznacz punkty posredni do wyznacznia wektorów A, B, C i D
@@ -256,6 +256,10 @@ function boehmAlgoritm(nurbs, draw) {
     console.log(e.message);
   }
 
+  var pGeometry = new THREE.CircleBufferGeometry(5, 16);
+  var pMaterial = new THREE.MeshBasicMaterial({
+    color: "black"
+  });
   if (draw === undefined) draw = true;
 
   var geometry, mesh, arr;
@@ -291,10 +295,8 @@ function boehmAlgoritm(nurbs, draw) {
       }
       geometry.faces.push(new THREE.Face3(0, 1, 2));
       mesh = new THREE.Mesh(geometry, material);
-      if (!draw) {
-        mesh.visible = false;
-      }
       group.add(mesh);
+
     } else if (nurbs.controlPoints.length > 3) {
       //wyznaczenie wierzcholkow Beziera
       for (var i = 1; i <= nurbs.controlPoints.length - 3; i++) {
@@ -314,9 +316,6 @@ function boehmAlgoritm(nurbs, draw) {
       }
       geometry.faces.push(new THREE.Face3(0, 1, 2));
       mesh = new THREE.Mesh(geometry, material);
-      if (!draw) {
-        mesh.visible = false;
-      }
       group.add(mesh);
       for (var i = 0; i < processed.length - 1; i++) {
         geometry = new THREE.Geometry();
@@ -326,10 +325,12 @@ function boehmAlgoritm(nurbs, draw) {
         }
         geometry.faces.push(new THREE.Face3(0, 1, 2));
         mesh = new THREE.Mesh(geometry, material);
-        if (!draw) {
-          mesh.visible = false;
-        }
+
+        var point = new THREE.Mesh(pGeometry, pMaterial);
+        point.position.copy(processed[i]);
+        point.position.z = 2;
         group.add(mesh);
+        group.add(point);
       }
       geometry = new THREE.Geometry();
       geometry.vertices.push(processed[processed.length - 1]);
@@ -340,10 +341,12 @@ function boehmAlgoritm(nurbs, draw) {
       }
       geometry.faces.push(new THREE.Face3(0, 1, 2));
       mesh = new THREE.Mesh(geometry, material);
-      if (!draw) {
-        mesh.visible = false;
-      }
+
+      var point = new THREE.Mesh(pGeometry, pMaterial);
+      point.position.copy(processed[processed.length - 1]);
+      point.position.z = 2;
       group.add(mesh);
+      group.add(point);
     }
   } else if (nurbs.degree == 3) {
     geometry = new THREE.Geometry();
@@ -363,9 +366,6 @@ function boehmAlgoritm(nurbs, draw) {
 
       //rysowanie otoczki
       mesh = new THREE.Mesh(geometry, material);
-      if (!draw) {
-        mesh.visible = false;
-      }
       group.add(mesh);
     } else if (nurbs.controlPoints.length > 4) {
       for (var i = 1; i < nurbs.controlPoints.length - 2; i++) {
@@ -379,6 +379,14 @@ function boehmAlgoritm(nurbs, draw) {
         D.y = (A.y * A.w * d[i + 3] + B.y * B.w * (d[i + 1] + d[i + 2])) / (D.w * (d[i + 1] + d[i + 2] + d[i + 3]));
         processed.push(C);
         processed.push(D);
+
+        var point = new THREE.Mesh(pGeometry, pMaterial);
+        point.position.copy(C);
+        group.add(point);
+
+        point = new THREE.Mesh(pGeometry, pMaterial);
+        point.position.copy(D);
+        group.add(point);
       }
 
       //wyznaczone boki dzielimy na pol
@@ -389,6 +397,11 @@ function boehmAlgoritm(nurbs, draw) {
         C.x = (A.x * A.w * (d[i + 4]) + B.x * B.w * d[i + 3]) / (C.w * (d[i + 3] + d[i + 4]));
         C.y = (A.y * A.w * (d[i + 4]) + B.y * B.w * d[i + 3]) / (C.w * (d[i + 3] + d[i + 4]));
         processed2.push(C);
+
+        var point = new THREE.Mesh(pGeometry, pMaterial);
+        point.position.copy(C);
+        point.position.z = 2;
+        group.add(point);
       }
 
       //definiowanie geometrii
@@ -414,13 +427,24 @@ function boehmAlgoritm(nurbs, draw) {
           }
           //rysowanie otoczki
           mesh = new THREE.Mesh(arr, material);
-          if (!draw) {
-            mesh.visible = false;
-          }
           group.add(mesh);
+
         }
       }
+      //line segments
+      var sGeometry = new THREE.Geometry();
+      for (var i = 1; i < processed.length - 1; i++) {
+        sGeometry.vertices.push(processed[i]);
+      }
+      var sMaterial = new THREE.LineBasicMaterial({
+        color: "black",
+        linewidth: 2
+      });
+      group.add(new THREE.LineSegments(sGeometry, sMaterial));
     }
+  }
+  if (!draw) {
+    group.visible = false;
   }
 }
 
@@ -545,7 +569,7 @@ BezierCurve.prototype.getPoint = function (t) {
     return new THREE.Vector3(sumaX, sumaY, 0);
   } else {
     for (var i = 0; i <= this.n; i++) {
-      val = dwumian(this.n, i) * Math.pow(k, (this.n - i)) * Math.pow(t, i)* this.weight[i];
+      val = dwumian(this.n, i) * Math.pow(k, (this.n - i)) * Math.pow(t, i) * this.weight[i];
       suma += val;
       sumaX += val * this.geometry[i * 3];
       sumaY += val * this.geometry[i * 3 + 1];
