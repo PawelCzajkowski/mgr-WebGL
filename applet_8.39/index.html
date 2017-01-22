@@ -19,7 +19,6 @@
       left: 5%;
       bottom: 0;
       text-align: justify;
-      margin-bottom: 10px;
     }
 
     #suwak {
@@ -212,7 +211,7 @@
       var l = Math.round(nurbsWezly.length / 2);
       for (var i = 0, j = -l; i < nurbsWezly.length; i++, j++) {
         temp = new THREE.Vector3().lerpVectors(A, B, nurbsWezly[i]);
-        var cubegeometry = new THREE.PlaneGeometry(12, 12);
+        var cubegeometry = new THREE.PlaneGeometry(10, 10);
         var material = new THREE.MeshBasicMaterial({
           color: "blue"
         });
