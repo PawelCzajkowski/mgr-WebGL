@@ -203,7 +203,6 @@
       var point = new THREE.Sprite(pMaterial);
       point.position.x = Px;
       point.position.y = Py;
-      point.position.z = 1;
 
       point.scale.x = point.scale.y = 10;
       GoP.add(point);
@@ -226,7 +225,6 @@
           point.position.subVectors(points[1].position, points[0].position);
           point.position.divideScalar(3);
           point.position.add(points[0].position);
-          point.position.z = 0;
           point.scale.x = point.scale.y = 10;
           controlPoints.push(point);
           GoP.add(point);
@@ -238,7 +236,6 @@
           point.position.subVectors(points[0].position, points[2].position);
           point.position.divideScalar(3);
           point.position.add(points[1].position);
-          point.position.z = 0;
           point.scale.x = point.scale.y = 10;
           controlPoints.push(point);
           GoP.add(point);
@@ -256,7 +253,6 @@
         point = new THREE.Sprite(pMaterial);
         point.position.subVectors(points[i - 1].position, controlPoints[controlPoints.length - 1].position);
         point.position.add(points[i - 1].position);
-        point.position.z = 0;
         point.scale.x = point.scale.y = 10;
         controlPoints.push(point);
         GoP.add(point);
@@ -399,10 +395,10 @@
           document.body.style.cursor = 'pointer';
         } else {
           if (INTERSECTED) {
-            if (INTERSECTED.position.z == 0) {
-              INTERSECTED.material.color.set("blue");
-            } else {
+            if (points.indexOf(INTERSECTED) != -1) {
               INTERSECTED.material.color.set("green");
+            } else if (controlPoints.indexOf(INTERSECTED) != -1) {
+              INTERSECTED.material.color.set("blue");
             }
           }
           INTERSECTED = null;
