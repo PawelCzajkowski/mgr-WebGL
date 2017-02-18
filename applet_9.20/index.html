@@ -24,10 +24,10 @@
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
     <li>Stopień U:
-      <input id='uDeg' type="number" size="3" min="1" value="1" onclick="recalculateU()">
+      <input id='uDeg' type="number" size="3" min="1" value="1" onclick="change()">
     </li>
     <li>Stopień V:
-      <input id='vDeg' type="number" size="3" min="1" value="1" onclick="recalculateV()">
+      <input id='vDeg' type="number" size="3" min="1" value="1" onclick="change()">
     </li>
     <li style="padding: 8px">Ilość segmentów u: <span id="u">3</span>
       <br>
@@ -154,7 +154,7 @@
       vDeg = Number(document.getElementById("vDeg").value);
       if (uDeg >= cols || vDeg >= rows) {
         passed = false;
-        alert("Za duży stopień krzywej!");
+        alert("Stopień powierzchni jest za duży!");
       }
       if (passed) {
         recalculateKnots();

@@ -124,6 +124,11 @@
     function changeDegree(val) {
       stopien = Number(val);
 
+      if (stopien >= nurbsPunktyKontrolne.length) {
+        alert("Stopień krzywej musi być mniejszy o liczby punktów kontrolnych!");
+        return;
+      }
+
       if (stopien != 2 && stopien != 3) {
         document.getElementById("boehm").checked = false;
         document.getElementById("boehm").disabled = true;
