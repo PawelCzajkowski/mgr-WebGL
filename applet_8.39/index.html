@@ -127,6 +127,7 @@
       if (stopien != 2 && stopien != 3) {
         document.getElementById("boehm").checked = false;
         document.getElementById("boehm").disabled = true;
+        scene.remove(scene.getObjectByName("punkty_podzialu"));
         scene.remove(scene.getObjectByName("otoczka"));
       } else {
         document.getElementById("boehm").disabled = false;

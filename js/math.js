@@ -258,7 +258,7 @@ function boehmAlgoritm(nurbs, draw) {
     console.log(e.message);
   }
 
-  var pGeometry = new THREE.CircleBufferGeometry(5, 16);
+  var pGeometry = new THREE.CircleBufferGeometry(4, 16);
   var pMaterial = new THREE.MeshBasicMaterial({
     color: "black"
   });
