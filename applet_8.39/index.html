@@ -362,7 +362,7 @@
         var punkty = new THREE.Group();
         punkty.name = "points";
         scene.add(punkty);
-        for (var i = stopien + 1; i < nurbsWezly.length - stopien; i++) {
+        for (var i = stopien + 1; i < nurbsWezly.length - stopien - 1; i++) {
           var pMaterial = new THREE.SpriteMaterial({
             color: "blue"
           });
@@ -371,6 +371,7 @@
           var position = nurbsCurve.getPoint(nurbsWezly[i]);
           point.position.x = position.x;
           point.position.y = position.y;
+          point.position.z = 10;
           punkty.add(point);
         }
         drawDeBoor();
