@@ -24,10 +24,10 @@
   <ul id="navi">
     <li><a class="nowy" href="#" onclick="show_div()">Nowa</a></li>
     <li>Stopień U:
-      <input id='uDeg' type="number" size="3" min="1" value="3" onclick="change()">
+      <input id='uDeg' type="number" size="3" min="1" value="3" onclick="recalculateU()">
     </li>
     <li>Stopień V:
-      <input id='vDeg' type="number" size="3" min="1" value="3" onclick="change()">
+      <input id='vDeg' type="number" size="3" min="1" value="3" onclick="recalculateV()">
     </li>
     <li style="padding: 8px">Ilość segmentów u: <span id="u">3</span>
       <br>
@@ -184,6 +184,10 @@
 
     function recalculateU() {
       uDeg = Number(document.getElementById("uDeg").value);
+      if (uDeg >= cols) {
+        alert("Wartość stopnia U jest za duża!");
+        return;
+      }
       uKnots = [];
       for (var i = 0; i < uDeg + 1; i++) {
         uKnots.push(0);
@@ -198,6 +202,10 @@
 
     function recalculateV() {
       vDeg = Number(document.getElementById("vDeg").value);
+      if (vDeg >= rows) {
+        alert("Wartość stopnia V jest za duża!");
+        return;
+      }
       vKnots = [];
       for (var i = 0; i < vDeg + 1; i++) {
         vKnots.push(0);
@@ -210,7 +218,7 @@
       showBspline();
     }
 
-    function recalculateKnots(t) {
+    function recalculateKnots() {
       recalculateU();
       recalculateV();
     }
